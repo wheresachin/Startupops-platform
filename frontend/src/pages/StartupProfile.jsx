@@ -2,16 +2,38 @@ import React, { useState, useEffect } from 'react';
 import { getStartupDetails, getTeam } from '../services/mockData';
 import { Building2, Users, Edit2, Save, Plus } from 'lucide-react';
 import { motion } from 'framer-motion';
+import AddMemberModal from '../components/AddMemberModal';
 
 const StartupProfile = () => {
     const [startup, setStartup] = useState(null);
     const [team, setTeam] = useState([]);
     const [isEditing, setIsEditing] = useState(false);
 
+    const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+
     useEffect(() => {
         getStartupDetails().then(setStartup);
         getTeam().then(setTeam);
     }, []);
+
+    const handleAddMember = (newMember) => {
+        // Generate initials for avatar
+        const initials = newMember.name
+            .split(' ')
+            .map((n) => n[0])
+            .join('')
+            .toUpperCase()
+            .slice(0, 2);
+
+        const memberWithId = {
+            ...newMember,
+            id: Date.now(), // Simple ID generation
+            avatar: initials,
+        };
+
+        setTeam([...team, memberWithId]);
+        setIsAddMemberModalOpen(false);
+    };
 
     if (!startup) return <div>Loading...</div>;
 
@@ -98,7 +120,10 @@ const StartupProfile = () => {
                         <Users className="w-5 h-5 text-blue-600 mr-2" />
                         <h2 className="text-lg font-bold text-slate-800">Team Members</h2>
                     </div>
-                    <button className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium">
+                    <button
+                        onClick={() => setIsAddMemberModalOpen(true)}
+                        className="flex items-center text-sm text-blue-600 hover:text-blue-700 font-medium"
+                    >
                         <Plus className="w-4 h-4 mr-1" /> Add Member
                     </button>
                 </div>
@@ -117,6 +142,13 @@ const StartupProfile = () => {
                     ))}
                 </div>
             </div>
+
+            {/* Add Member Modal */}
+            <AddMemberModal
+                isOpen={isAddMemberModalOpen}
+                onClose={() => setIsAddMemberModalOpen(false)}
+                onAdd={handleAddMember}
+            />
         </div>
     );
 };
