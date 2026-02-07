@@ -40,9 +40,43 @@ export const mockData = {
     ]
 };
 
+const loadFeedback = () => {
+    const saved = localStorage.getItem('feedback');
+    return saved ? JSON.parse(saved) : mockData.feedback;
+};
+
 export const getStartupDetails = () => Promise.resolve(mockData.startup);
 export const getKPIs = () => Promise.resolve(mockData.kpi);
 export const getTasks = () => Promise.resolve(mockData.tasks);
-export const getFeedback = () => Promise.resolve(mockData.feedback);
+export const getFeedback = () => Promise.resolve(loadFeedback());
 export const getAnalytics = () => Promise.resolve(mockData.analytics);
 export const getTeam = () => Promise.resolve(mockData.team);
+
+export const addFeedback = (newFeedback) => {
+    const feedback = loadFeedback();
+    const feedbackItem = {
+        id: Date.now(),
+        ...newFeedback,
+        status: 'New',
+        date: new Date().toISOString()
+    };
+    const updatedFeedback = [feedbackItem, ...feedback];
+    localStorage.setItem('feedback', JSON.stringify(updatedFeedback));
+    return Promise.resolve(feedbackItem);
+};
+
+export const deleteFeedback = (id) => {
+    const feedback = loadFeedback();
+    const updatedFeedback = feedback.filter(item => item.id !== id);
+    localStorage.setItem('feedback', JSON.stringify(updatedFeedback));
+    return Promise.resolve(true);
+};
+
+export const markFeedbackReviewed = (id) => {
+    const feedback = loadFeedback();
+    const updatedFeedback = feedback.map(item =>
+        item.id === id ? { ...item, status: 'Reviewed' } : item
+    );
+    localStorage.setItem('feedback', JSON.stringify(updatedFeedback));
+    return Promise.resolve(true);
+};

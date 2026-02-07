@@ -1,19 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { getFeedback } from '../services/mockData';
+import { getFeedback, deleteFeedback, markFeedbackReviewed } from '../services/mockData';
 import { MessageSquare, Star, Share2, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 const Feedback = () => {
     const [feedback, setFeedback] = useState([]);
     const [filter, setFilter] = useState('All');
 
-    useEffect(() => {
+    const fetchFeedback = () => {
         getFeedback().then(setFeedback);
+    };
+
+    useEffect(() => {
+        fetchFeedback();
+
+        // Refresh when window gains focus or local storage changes
+        window.addEventListener('focus', fetchFeedback);
+        window.addEventListener('storage', fetchFeedback);
+
+        return () => {
+            window.removeEventListener('focus', fetchFeedback);
+            window.removeEventListener('storage', fetchFeedback);
+        };
     }, []);
 
     if (!feedback) return <div>Loading...</div>;
 
     const filteredFeedback = filter === 'All' ? feedback : feedback.filter(f => f.status === filter);
+
+    const handleShare = () => {
+        const shareUrl = `${window.location.origin}/submit-feedback`;
+        navigator.clipboard.writeText(shareUrl)
+            .then(() => toast.success('Feedback link copied to clipboard!'))
+            .catch(() => toast.error('Failed to copy link'));
+    };
+
+    const handleDelete = (id) => {
+        deleteFeedback(id).then(() => {
+            toast.success('Feedback deleted');
+            fetchFeedback();
+        });
+    };
+
+    const handleMarkReviewed = (id) => {
+        markFeedbackReviewed(id).then(() => {
+            toast.success('Marked as reviewed');
+            fetchFeedback();
+        });
+    };
 
     return (
         <div className="space-y-6">
@@ -22,7 +57,10 @@ const Feedback = () => {
                     <h1 className="text-2xl font-bold text-slate-800">User Feedback</h1>
                     <p className="text-slate-500">Validate your ideas with real user insights.</p>
                 </div>
-                <button className="flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition">
+                <button
+                    onClick={handleShare}
+                    className="flex items-center px-4 py-2 bg-white border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition"
+                >
                     <Share2 className="w-4 h-4 mr-2" /> Share Feedback Link
                 </button>
             </div>
@@ -78,10 +116,10 @@ const Feedback = () => {
                         <div className="flex justify-between items-start mb-4">
                             <div className="flex items-center">
                                 <div className="w-8 h-8 rounded-full bg-slate-100 flex items-center justify-center text-xs font-bold text-slate-600 mr-3">
-                                    {item.user.charAt(0)}
+                                    {(item.user || item.name || '?').charAt(0)}
                                 </div>
                                 <div>
-                                    <p className="text-sm font-medium text-slate-900">{item.user}</p>
+                                    <p className="text-sm font-medium text-slate-900">{item.user || item.name}</p>
                                     <div className="flex text-yellow-400">
                                         {[...Array(5)].map((_, i) => (
                                             <Star key={i} className={`w-3 h-3 ${i < item.rating ? 'fill-current' : 'text-slate-200'}`} />
@@ -90,7 +128,7 @@ const Feedback = () => {
                                 </div>
                             </div>
                             <span className={`text-[10px] px-2 py-1 rounded-full font-medium ${item.status === 'New' ? 'bg-blue-100 text-blue-700' :
-                                    item.status === 'Reviewed' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
+                                item.status === 'Reviewed' ? 'bg-purple-100 text-purple-700' : 'bg-green-100 text-green-700'
                                 }`}>
                                 {item.status}
                             </span>
@@ -99,8 +137,18 @@ const Feedback = () => {
                             "{item.comment}"
                         </p>
                         <div className="mt-4 pt-4 border-t border-slate-50 flex justify-between items-center">
-                            <button className="text-xs text-slate-400 hover:text-blue-600 font-medium transition-colors">Mark as Reviewed</button>
-                            <button className="text-xs text-slate-400 hover:text-red-600 font-medium transition-colors">Delete</button>
+                            <button
+                                onClick={() => handleMarkReviewed(item.id)}
+                                className="text-xs text-slate-400 hover:text-blue-600 font-medium transition-colors"
+                            >
+                                Mark as Reviewed
+                            </button>
+                            <button
+                                onClick={() => handleDelete(item.id)}
+                                className="text-xs text-slate-400 hover:text-red-600 font-medium transition-colors"
+                            >
+                                Delete
+                            </button>
                         </div>
                     </motion.div>
                 ))}
