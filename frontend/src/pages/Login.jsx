@@ -70,8 +70,8 @@ const Login = () => {
                                     type="button"
                                     onClick={() => setRole('Founder')}
                                     className={`py-2 px-4 border rounded-md text-sm font-medium flex items-center justify-center ${role === 'Founder'
-                                            ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500'
-                                            : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                                        ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500'
+                                        : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                                         }`}
                                 >
                                     Founder
@@ -80,8 +80,8 @@ const Login = () => {
                                     type="button"
                                     onClick={() => setRole('Team')}
                                     className={`py-2 px-4 border rounded-md text-sm font-medium flex items-center justify-center ${role === 'Team'
-                                            ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500'
-                                            : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
+                                        ? 'bg-blue-50 border-blue-500 text-blue-700 ring-1 ring-blue-500'
+                                        : 'bg-white border-slate-300 text-slate-700 hover:bg-slate-50'
                                         }`}
                                 >
                                     Team Member
