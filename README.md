@@ -81,7 +81,7 @@ Follow these steps to set up the project locally.
 ## 👥 Contributors
 
 - **Sachin Kumar** - Full Stack Developer
-- **Nisha Kumari** - Project Contributor
+- **Nisha Kumari** - Frontend Developer
 - **Ashwani Kumar Mishra** - Frontend Developer
 
 ## 📄 License
