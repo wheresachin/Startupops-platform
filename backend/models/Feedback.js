@@ -7,8 +7,14 @@ const feedbackSchema = new mongoose.Schema({
         required: true,
     },
     user: {
-        type: String, // Name or Email of the person giving feedback
-        required: true,
+        name: {
+            type: String,
+            required: true,
+        },
+        email: {
+            type: String,
+            required: true,
+        },
     },
     rating: {
         type: Number,

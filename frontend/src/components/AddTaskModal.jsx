@@ -109,19 +109,39 @@ const AddTaskModal = ({ isOpen, onClose, onAdd, onUpdate, initialData, team }) =
                     </div>
 
                     <div>
-                        <label htmlFor="taskAssignee" className="block text-sm font-medium text-slate-700 mb-1">
-                            Assignee
+                        <label className="block text-sm font-medium text-slate-700 mb-1">
+                            Assignee (Search by Username)
                         </label>
+                        <input
+                            type="text"
+                            placeholder="Search username..."
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 mb-2"
+                            onChange={(e) => {
+                                const searchTerm = e.target.value.toLowerCase();
+                                const select = document.getElementById('assignee');
+                                const options = select.options;
+                                for (let i = 0; i < options.length; i++) {
+                                    const option = options[i];
+                                    const txt = option.text.toLowerCase();
+                                    if (txt.indexOf(searchTerm) > -1 || option.value === "") {
+                                        option.style.display = "";
+                                    } else {
+                                        option.style.display = "none";
+                                    }
+                                }
+                            }}
+                        />
                         <select
-                            id="taskAssignee"
+                            id="assignee"
+                            required
+                            className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
                             value={assignee}
                             onChange={(e) => setAssignee(e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                         >
-                            <option value="">Select Assignee</option>
-                            {team && team.map(member => (
+                            <option value="">Select Team Member</option>
+                            {team.map((member) => (
                                 <option key={member._id} value={member._id}>
-                                    {member.name} {member.username ? `(@${member.username})` : ''}
+                                    {member.name} (@{member.username || 'user'})
                                 </option>
                             ))}
                         </select>

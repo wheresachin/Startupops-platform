@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
-import { Building2, Users, Edit2, Save, Plus } from 'lucide-react';
+import { Building2, Users, Edit2, Save, Plus, Link, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AddMemberModal from '../components/AddMemberModal';
 import { useAuth } from '../context/AuthContext';
@@ -13,6 +13,7 @@ const StartupProfile = () => {
     const [isEditing, setIsEditing] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isAddMemberModalOpen, setIsAddMemberModalOpen] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     // Form state for creating/editing
     const [formData, setFormData] = useState({
@@ -100,6 +101,15 @@ const StartupProfile = () => {
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to add member');
         }
+    };
+
+    const copyFeedbackLink = () => {
+        const feedbackLink = `${window.location.origin}/submit-feedback?startup=${startup._id}`;
+        navigator.clipboard.writeText(feedbackLink).then(() => {
+            setCopied(true);
+            toast.success('Feedback link copied!');
+            setTimeout(() => setCopied(false), 2000);
+        });
     };
 
     const getInitials = (name) => {
@@ -194,19 +204,19 @@ const StartupProfile = () => {
     return (
         <div className="space-y-6">
             {/* Header */}
-            <div className="flex justify-between items-center">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     {isEditing ? (
                         <input
                             type="text"
-                            className="text-2xl font-bold text-slate-800 border-b border-slate-300 focus:outline-none focus:border-blue-500 bg-transparent"
+                            className="text-2xl font-bold text-slate-800 border-b border-slate-300 focus:outline-none focus:border-blue-500 bg-transparent w-full"
                             value={formData.name}
                             onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                         />
                     ) : (
                         <h1 className="text-2xl font-bold text-slate-800">{startup.name}</h1>
                     )}
-                    <p className="text-slate-500">Manage your startup identity and team.</p>
+                    <p className="text-slate-500 text-sm sm:text-base">Manage your startup identity and team.</p>
                 </div>
                 <button
                     onClick={() => {
@@ -216,7 +226,7 @@ const StartupProfile = () => {
                             setIsEditing(true);
                         }
                     }}
-                    className={`flex items-center px-4 py-2 rounded-lg transition ${isEditing ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
+                    className={`flex items-center px-4 py-2 rounded-lg transition text-sm font-medium ${isEditing ? 'bg-green-600 hover:bg-green-700 text-white' : 'bg-white border border-slate-300 text-slate-700 hover:bg-slate-50'
                         }`}
                 >
                     {isEditing ? <Save className="w-4 h-4 mr-2" /> : <Edit2 className="w-4 h-4 mr-2" />}
@@ -302,6 +312,46 @@ const StartupProfile = () => {
                     </div>
                 </motion.div>
             </div>
+
+            {/* Feedback Link Section */}
+            <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-xl shadow-sm border border-purple-100"
+            >
+                <div className="flex items-center mb-4">
+                    <Link className="w-5 h-5 text-purple-600 mr-2" />
+                    <h2 className="text-lg font-bold text-slate-800">Shareable Feedback Link</h2>
+                </div>
+                <p className="text-slate-600 text-sm mb-4">
+                    Share this link with users, customers, or investors to collect feedback directly.
+                </p>
+                <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                    <div className="flex-1 bg-white px-4 py-3 rounded-lg border border-slate-200 text-sm text-slate-700 font-mono overflow-x-auto whitespace-nowrap">
+                        {window.location.origin}/submit-feedback?startup={startup._id}
+                    </div>
+                    <button
+                        onClick={copyFeedbackLink}
+                        className={`px-4 py-3 rounded-lg font-medium transition-all flex items-center justify-center shrink-0 ${copied
+                            ? 'bg-green-600 text-white'
+                            : 'bg-purple-600 hover:bg-purple-700 text-white'
+                            }`}
+                    >
+                        {copied ? (
+                            <>
+                                <Check className="w-4 h-4 mr-2" />
+                                Copied!
+                            </>
+                        ) : (
+                            <>
+                                <Copy className="w-4 h-4 mr-2" />
+                                Copy Link
+                            </>
+                        )}
+                    </button>
+                </div>
+            </motion.div>
 
             {/* Team Section */}
             <div className="bg-white p-6 rounded-xl shadow-sm border border-slate-100">

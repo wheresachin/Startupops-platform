@@ -5,7 +5,9 @@ const Startup = require('../models/Startup');
 // @route   POST /api/feedback
 // @access  Public
 exports.createFeedback = async (req, res) => {
-    const { startupId, user, rating, comment } = req.body;
+    // Support both URL param and body param for startupId
+    const startupId = req.params.startupId || req.body.startupId;
+    const { name, email, rating, comment, user } = req.body;
 
     try {
         const startup = await Startup.findById(startupId);
@@ -13,9 +15,12 @@ exports.createFeedback = async (req, res) => {
             return res.status(404).json({ message: 'Startup not found' });
         }
 
+        // Support both formats: {name, email} or {user}
+        const feedbackUser = user || { name, email };
+
         const feedback = await Feedback.create({
             startup: startupId,
-            user,
+            user: feedbackUser,
             rating,
             comment,
         });

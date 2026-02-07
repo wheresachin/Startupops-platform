@@ -29,6 +29,12 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/pitch', require('./routes/pitchRoutes'));
+app.use('/api/dashboard', require('./routes/dashboardRoutes'));
+app.use('/api/investor', require('./routes/investorRoutes'));
+app.use('/api/mentor', require('./routes/mentorRoutes'));
+app.use('/api/access', require('./routes/accessRoutes'));
+app.use('/api/subscription', require('./routes/subscriptionRoutes'));
 
 app.get('/', (req, res) => {
     res.send('StartupOps API is running');

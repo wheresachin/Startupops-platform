@@ -3,8 +3,9 @@ const router = express.Router();
 const { createFeedback, getFeedback, updateFeedbackStatus, deleteFeedback } = require('../controllers/feedbackController');
 const { protect } = require('../middleware/authMiddleware');
 
-// Public route to submit feedback (no protect middleware, but we need startupId)
+// Public route to submit feedback (no protect middleware)
 router.post('/', createFeedback);
+router.post('/:startupId', createFeedback);
 
 // Private routes for founders to managing feedback
 router.get('/:startupId', protect, getFeedback);

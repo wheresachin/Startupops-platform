@@ -71,3 +71,27 @@ exports.loginUser = async (req, res) => {
         res.status(500).json({ message: error.message });
     }
 };
+
+// @desc    Get current user
+// @route   GET /api/auth/me
+// @access  Private
+exports.getCurrentUser = async (req, res) => {
+    try {
+        const user = await User.findById(req.user._id).select('-password');
+
+        if (user) {
+            res.json({
+                _id: user._id,
+                name: user.name,
+                email: user.email,
+                username: user.username,
+                role: user.role,
+                startup: user.startup,
+            });
+        } else {
+            res.status(404).json({ message: 'User not found' });
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};

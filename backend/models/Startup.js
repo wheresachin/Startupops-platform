@@ -31,6 +31,25 @@ const startupSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'User',
     }],
+    subscription: {
+        plan: {
+            type: String,
+            enum: ['Free', 'Pro', 'Enterprise'],
+            default: 'Free'
+        },
+        status: {
+            type: String,
+            enum: ['active', 'expired', 'cancelled'],
+            default: 'active'
+        },
+        startDate: {
+            type: Date,
+            default: Date.now
+        },
+        validUntil: {
+            type: Date
+        }
+    }
 }, { timestamps: true });
 
 const Startup = mongoose.model('Startup', startupSchema);

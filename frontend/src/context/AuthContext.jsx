@@ -11,11 +11,32 @@ export const AuthProvider = ({ children }) => {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const userInfo = localStorage.getItem('userInfo');
-        if (userInfo) {
-            setUser(JSON.parse(userInfo));
-        }
-        setLoading(false);
+        const validateUser = async () => {
+            const userInfo = localStorage.getItem('userInfo');
+            if (userInfo) {
+                try {
+                    const parsedUser = JSON.parse(userInfo);
+
+                    // Validate token with backend
+                    const { data } = await axios.get('/api/auth/me', {
+                        headers: { Authorization: `Bearer ${parsedUser.token}` }
+                    });
+
+                    // Update user with fresh data from backend
+                    const updatedUser = { ...data, token: parsedUser.token };
+                    setUser(updatedUser);
+                    localStorage.setItem('userInfo', JSON.stringify(updatedUser));
+                } catch (error) {
+                    // Token invalid or expired, clear localStorage
+                    console.error('Session validation failed:', error);
+                    localStorage.removeItem('userInfo');
+                    setUser(null);
+                }
+            }
+            setLoading(false);
+        };
+
+        validateUser();
     }, []);
 
     const login = async (email, password) => {

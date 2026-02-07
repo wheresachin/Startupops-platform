@@ -35,6 +35,27 @@ exports.createStartup = async (req, res) => {
     }
 };
 
+// @desc    Get logged-in user's startup
+// @route   GET /api/startups/my-startup
+// @access  Private
+exports.getMyStartup = async (req, res) => {
+    try {
+        // Find startup where user is in the team
+        const startup = await Startup.findOne({
+            team: req.user._id
+        }).populate('team', 'name email role username');
+
+        if (!startup) {
+            return res.status(404).json({ message: 'No startup found. Please create a startup profile first.' });
+        }
+
+        res.json(startup);
+    } catch (error) {
+        console.error('Error fetching user startup:', error);
+        res.status(500).json({ message: error.message });
+    }
+};
+
 // @desc    Get startup details
 // @route   GET /api/startups/:id
 // @access  Private
