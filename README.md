@@ -1,89 +1,63 @@
-# Startupops Platform
+# StartupOps Platform
 
-Startupops Platform is a comprehensive web application designed to streamline startup operations. It features a modern, responsive frontend and a robust backend to handle data and user interactions efficiently.
+StartupOps is a web platform that helps early-stage startups manage execution, team collaboration, idea validation, and growth in one place. It provides task and milestone tracking, structured feedback, real-time analytics, and role-based access for founders, teams, mentors, and investors. All data is fetched from a live MongoDB Atlas database.
+
+Built for **Udyamitsav ’26 – Techpreneur Hackathon**.
+
+---
 
 ## 🚀 Features
+- Role-based authentication (Founder, Team, Mentor, Investor)
+- Central startup workspace
+- Task & milestone management (Kanban)
+- Structured feedback & idea validation
+- Real-time analytics dashboard
+- Investor & mentor dashboards
+- Founder-based subscription system
+- Razorpay payment integration
 
-- **Modern User Interface**: Built with React and styled using Tailwind CSS for a sleek, responsive design.
-- **Interactive Elements**: Utilizes Framer Motion for smooth animations and Recharts for data visualization.
-- **Secure Authentication**: Implements JWT-based authentication with secure password hashing via bcryptjs.
-- **RESTful API**: specific backend endpoints managed by Express.js.
-- **Database Management**: Uses MongoDB with Mongoose for structured data modeling.
+---
 
 ## 🛠️ Tech Stack
+**Frontend:** React (Vite), Tailwind CSS, Framer Motion  
+**Backend:** Node.js, Express, MongoDB Atlas, JWT, bcryptjs  
 
-### Frontend
-- **Framework**: [React](https://react.dev/) (powered by [Vite](https://vitejs.dev/))
-- **Styling**: [Tailwind CSS](https://tailwindcss.com/)
-- **Animation**: [Framer Motion](https://www.framer.com/motion/)
-- **State Management & Routing**: React Router DOM
-- **Icons**: Lucide React
-- **Charts**: Recharts
+---
+
+## ⚙️ Setup (Short)
 
 ### Backend
-- **Runtime**: [Node.js](https://nodejs.org/)
-- **Framework**: [Express.js](https://expressjs.com/)
-- **Database**: [MongoDB](https://www.mongodb.com/) (via [Mongoose](https://mongoosejs.com/))
-- **Authentication**: JSON Web Token (JWT) & Bcryptjs
-- **Utilities**: Dotenv, Cors
+```bash
+cd backend
+npm install
+npm run dev
+Create .env:
 
-## 📦 Getting Started
+PORT=5000
+MONGO_URI=your_mongodb_atlas_connection_string
+JWT_SECRET=your_jwt_secret
+RAZORPAY_KEY_ID=your_key
+RAZORPAY_KEY_SECRET=your_secret
 
-Follow these steps to set up the project locally.
+Frontend
+cd frontend
+npm install
+npm run dev
+Open: http://localhost:5173
 
-### Prerequisites
-- Node.js (v14 or higher recommended)
-- MongoDB (running locally or a cloud instance like MongoDB Atlas)
+🔐 Security
+JWT authentication
 
-### Backend Setup
+Role-based access control
 
-1. Navigate to the backend directory:
-   ```bash
-   cd backend
-   ```
+Secure password hashing
 
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
+Environment variable configuration
 
-3. Create a `.env` file in the `backend` directory and add your configuration (example):
-   ```env
-   PORT=5000
-   MONGO_URI=your_mongodb_connection_string
-   JWT_SECRET=your_jwt_secret
-   ```
+👥 Contributors
+@wheresachin – Full Stack Developer
 
-4. Start the backend server:
-   ```bash
-   npm run dev
-   ```
+@nishapandey96 – Frontend Developer
 
-### Frontend Setup
+@itashwani1 – Frontend Developer
 
-1. Open a new terminal and navigate to the frontend directory:
-   ```bash
-   cd frontend
-   ```
-
-2. Install dependencies:
-   ```bash
-   npm install
-   ```
-
-3. Start the development server:
-   ```bash
-   npm run dev
-   ```
-
-4. Open your browser and navigate to `http://localhost:5173` (or the port shown in your terminal).
-
-## 👥 Contributors
-
-- **Sachin Kumar** - Full Stack Developer
-- **Nisha Kumari** - Frontend Developer
-- **Ashwani Kumar Mishra** - Frontend Developer
-
-## 📄 License
-
-This project is licensed under the ISC License.
