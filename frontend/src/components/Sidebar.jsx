@@ -1,17 +1,28 @@
 import React from 'react';
-import { NavLink } from 'react-router-dom';
+import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, Building2, CheckSquare, MessageSquare, BarChart3, LogOut, Sparkles } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useAuth } from '../context/AuthContext';
 
 const Sidebar = () => {
-    const navItems = [
-        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
-        { name: 'Startup Profile', path: '/profile', icon: Building2 },
-        { name: 'Tasks & Milestones', path: '/tasks', icon: CheckSquare },
-        { name: 'Feedback', path: '/feedback', icon: MessageSquare },
-        { name: 'Analytics', path: '/analytics', icon: BarChart3 },
-        { name: 'Pitch Generator', path: '/pitch', icon: Sparkles },
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
+    const allNavItems = [
+        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['Founder', 'Team'] },
+        { name: 'Startup Profile', path: '/profile', icon: Building2, roles: ['Founder'] },
+        { name: 'Tasks & Milestones', path: '/tasks', icon: CheckSquare, roles: ['Founder', 'Team'] },
+        { name: 'Feedback', path: '/feedback', icon: MessageSquare, roles: ['Founder', 'Team'] },
+        { name: 'Analytics', path: '/analytics', icon: BarChart3, roles: ['Founder'] },
+        { name: 'Pitch Generator', path: '/pitch', icon: Sparkles, roles: ['Founder'] },
     ];
+
+    const navItems = allNavItems.filter(item => item.roles.includes(user?.role || 'Founder'));
 
     return (
         <aside className="w-64 bg-white border-r border-slate-200 hidden md:flex flex-col h-full">
@@ -45,7 +56,10 @@ const Sidebar = () => {
             </nav>
 
             <div className="p-4 border-t border-slate-200">
-                <button className="flex items-center w-full px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors">
+                <button
+                    onClick={handleLogout}
+                    className="flex items-center w-full px-4 py-3 text-sm font-medium text-slate-600 rounded-lg hover:bg-red-50 hover:text-red-700 transition-colors"
+                >
                     <LogOut className="w-5 h-5 mr-3" />
                     Sign Out
                 </button>

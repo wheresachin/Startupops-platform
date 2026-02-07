@@ -1,7 +1,22 @@
 import React from 'react';
-import { Bell, Search, User } from 'lucide-react';
+import { Bell, Search, LogOut } from 'lucide-react';
+import { useAuth } from '../context/AuthContext';
+import { useNavigate } from 'react-router-dom';
 
 const Topbar = () => {
+    const { user, logout } = useAuth();
+    const navigate = useNavigate();
+
+    const handleLogout = () => {
+        logout();
+        navigate('/login');
+    };
+
+    const getInitials = (name) => {
+        if (!name) return 'U';
+        return name.split(' ').map((n) => n[0]).join('').toUpperCase();
+    };
+
     return (
         <header className="h-16 bg-white border-b border-slate-200 flex items-center justify-between px-6 sticky top-0 z-10">
             <div className="flex items-center w-96">
@@ -25,12 +40,19 @@ const Topbar = () => {
 
                 <div className="flex items-center space-x-3 pl-4 border-l border-slate-200">
                     <div className="text-right hidden sm:block">
-                        <div className="text-sm font-medium text-slate-900">Alex Founder</div>
-                        <div className="text-xs text-slate-500">CEO @ NextGen</div>
+                        <div className="text-sm font-medium text-slate-900">{user?.name || 'User'}</div>
+                        <div className="text-xs text-slate-500">{user?.role || 'Member'}</div>
                     </div>
                     <div className="h-8 w-8 rounded-full bg-blue-100 flex items-center justify-center text-blue-700 font-medium ring-2 ring-white cursor-pointer">
-                        AF
+                        {getInitials(user?.name)}
                     </div>
+                    <button
+                        onClick={handleLogout}
+                        className="p-1 ml-2 text-slate-400 hover:text-red-500 transition-colors"
+                        title="Sign Out"
+                    >
+                        <LogOut className="w-5 h-5" />
+                    </button>
                 </div>
             </div>
         </header>
