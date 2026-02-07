@@ -7,6 +7,8 @@ const User = require('../models/User');
 exports.createStartup = async (req, res) => {
     const { name, problem, solution, market, stage } = req.body;
 
+    console.log('Creating startup:', req.body);
+
     try {
         const startup = new Startup({
             name,
@@ -20,12 +22,15 @@ exports.createStartup = async (req, res) => {
 
         const createdStartup = await startup.save();
 
-        // Link startup to user
+        // Link startup to user using findByIdAndUpdate to avoid validation errors with select('-password')
+        await User.findByIdAndUpdate(req.user._id, { startup: createdStartup._id });
+
+        // Update req.user for response if needed (optional)
         req.user.startup = createdStartup._id;
-        await req.user.save();
 
         res.status(201).json(createdStartup);
     } catch (error) {
+        console.error('Error creating startup:', error);
         res.status(500).json({ message: error.message });
     }
 };
@@ -35,7 +40,7 @@ exports.createStartup = async (req, res) => {
 // @access  Private
 exports.getStartup = async (req, res) => {
     try {
-        const startup = await Startup.findById(req.params.id).populate('team', 'name email role');
+        const startup = await Startup.findById(req.params.id).populate('team', 'name email role username');
 
         if (startup) {
             // Check if user belongs to this startup
@@ -107,9 +112,10 @@ exports.addTeamMember = async (req, res) => {
         await startup.save();
 
         // Link startup to user
-        user.startup = startup._id;
-        user.role = 'Team'; // Default to Team role
-        await user.save();
+        await User.findByIdAndUpdate(user._id, {
+            startup: startup._id,
+            role: 'Team'
+        });
 
         res.json({ message: 'Team member added', team: startup.team });
 

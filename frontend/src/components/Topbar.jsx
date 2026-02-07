@@ -1,11 +1,52 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Bell, Search, LogOut } from 'lucide-react';
+import axios from 'axios';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const Topbar = () => {
     const { user, logout } = useAuth();
     const navigate = useNavigate();
+    const [notifications, setNotifications] = useState([]);
+    const [showNotifications, setShowNotifications] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
+
+    // Initial fetch
+    useEffect(() => {
+        if (user) {
+            fetchNotifications();
+            // Optional: long polling or socket.io could be used here for real-time
+            const interval = setInterval(fetchNotifications, 30000); // Poll every 30 seconds
+            return () => clearInterval(interval);
+        }
+    }, [user]);
+
+    const fetchNotifications = async () => {
+        try {
+            const { data } = await axios.get('/api/notifications', {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            setNotifications(data);
+            setUnreadCount(data.filter(n => !n.read).length);
+        } catch (error) {
+            console.error('Error fetching notifications:', error);
+        }
+    };
+
+    const handleMarkAsRead = async (id) => {
+        try {
+            await axios.put(`/api/notifications/${id}/read`, {}, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            // Update local state
+            setNotifications(notifications.map(n =>
+                n._id === id ? { ...n, read: true } : n
+            ));
+            setUnreadCount(prev => Math.max(0, prev - 1));
+        } catch (error) {
+            console.error('Error marking as read:', error);
+        }
+    };
 
     const handleLogout = () => {
         logout();
@@ -33,10 +74,46 @@ const Topbar = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-                <button className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors relative">
-                    <Bell className="w-5 h-5" />
-                    <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
-                </button>
+                <div className="relative">
+                    <button
+                        onClick={() => setShowNotifications(!showNotifications)}
+                        className="p-2 text-slate-500 hover:bg-slate-100 rounded-full transition-colors relative"
+                    >
+                        <Bell className="w-5 h-5" />
+                        {unreadCount > 0 && (
+                            <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-red-500 rounded-full border-2 border-white"></span>
+                        )}
+                    </button>
+
+                    {/* Notifications Dropdown */}
+                    {showNotifications && (
+                        <div className="absolute right-0 mt-2 w-80 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                            <div className="px-4 py-2 border-b border-slate-100 flex justify-between items-center">
+                                <h3 className="font-semibold text-slate-700">Notifications</h3>
+                            </div>
+                            <div className="max-h-96 overflow-y-auto">
+                                {notifications.length > 0 ? (
+                                    notifications.map(notification => (
+                                        <div
+                                            key={notification._id}
+                                            className={`px-4 py-3 hover:bg-slate-50 border-b border-slate-50 last:border-0 transition-colors cursor-pointer ${!notification.read ? 'bg-blue-50/50' : ''}`}
+                                            onClick={() => handleMarkAsRead(notification._id)}
+                                        >
+                                            <p className="text-sm text-slate-800">{notification.message}</p>
+                                            <p className="text-xs text-slate-500 mt-1">
+                                                {new Date(notification.createdAt).toLocaleDateString()} • {new Date(notification.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </p>
+                                        </div>
+                                    ))
+                                ) : (
+                                    <div className="px-4 py-6 text-center text-slate-500 text-sm">
+                                        No notifications
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    )}
+                </div>
 
                 <div className="flex items-center space-x-3 pl-4 border-l border-slate-200">
                     <div className="text-right hidden sm:block">

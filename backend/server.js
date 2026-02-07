@@ -5,7 +5,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/authRoutes');
 const startupRoutes = require('./routes/startupRoutes');
 const taskRoutes = require('./routes/taskRoutes');
-const feedbackRoutes = require('./routes/feedbackRoutes');
+// const feedbackRoutes = require('./routes/feedbackRoutes'); // We will require inline or uncomment this if used
 const analyticsRoutes = require('./routes/analyticsRoutes');
 
 dotenv.config();
@@ -26,7 +26,8 @@ mongoose.connect(process.env.MONGO_URI)
 app.use('/api/auth', authRoutes);
 app.use('/api/startups', startupRoutes);
 app.use('/api/tasks', taskRoutes);
-app.use('/api/feedback', feedbackRoutes);
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/analytics', analyticsRoutes);
 
 app.get('/', (req, res) => {

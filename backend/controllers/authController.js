@@ -11,13 +11,13 @@ const generateToken = (id) => {
 // @route   POST /api/auth/register
 // @access  Public
 exports.registerUser = async (req, res) => {
-    const { name, email, password, role } = req.body;
+    const { name, email, password, role, username } = req.body;
 
     try {
-        const userExists = await User.findOne({ email });
+        const userExists = await User.findOne({ $or: [{ email }, { username }] });
 
         if (userExists) {
-            return res.status(400).json({ message: 'User already exists' });
+            return res.status(400).json({ message: 'User with this email or username already exists' });
         }
 
         const user = await User.create({
@@ -25,6 +25,7 @@ exports.registerUser = async (req, res) => {
             email,
             password,
             role,
+            username,
         });
 
         if (user) {
@@ -32,6 +33,7 @@ exports.registerUser = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
+                username: user.username,
                 role: user.role,
                 token: generateToken(user._id),
             });
@@ -57,6 +59,7 @@ exports.loginUser = async (req, res) => {
                 _id: user._id,
                 name: user.name,
                 email: user.email,
+                username: user.username,
                 role: user.role,
                 startup: user.startup,
                 token: generateToken(user._id),

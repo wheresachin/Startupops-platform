@@ -1,5 +1,6 @@
 const Task = require('../models/Task');
 const Milestone = require('../models/Milestone');
+const Notification = require('../models/Notification'); // Import Notification model
 
 // @desc    Create a task
 // @route   POST /api/tasks
@@ -19,6 +20,18 @@ exports.createTask = async (req, res) => {
         });
 
         const createdTask = await task.save();
+
+        // Create notification if assignee exists and is not the creator
+        if (assignee && assignee.toString() !== req.user._id.toString()) {
+            await Notification.create({
+                recipient: assignee,
+                sender: req.user._id,
+                type: 'task_assigned',
+                message: `You have been assigned a new task: ${title}`,
+                relatedId: createdTask._id,
+            });
+        }
+
         res.status(201).json(createdTask);
     } catch (error) {
         res.status(500).json({ message: error.message });
@@ -114,6 +127,37 @@ exports.getMilestones = async (req, res) => {
     try {
         const milestones = await Milestone.find({ startup: req.user.startup });
         res.json(milestones);
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+};
+
+// @desc    Add comment to task
+// @route   POST /api/tasks/:id/comments
+// @access  Private
+exports.addTaskComment = async (req, res) => {
+    const { text } = req.body;
+
+    try {
+        const task = await Task.findById(req.params.id);
+
+        if (task) {
+            if (task.startup.toString() !== req.user.startup.toString()) {
+                return res.status(403).json({ message: 'Not authorized' });
+            }
+
+            const comment = {
+                user: req.user.name,
+                text,
+                createdAt: new Date()
+            };
+
+            task.comments.push(comment);
+            await task.save();
+            res.status(201).json(task);
+        } else {
+            res.status(404).json({ message: 'Task not found' });
+        }
     } catch (error) {
         res.status(500).json({ message: error.message });
     }

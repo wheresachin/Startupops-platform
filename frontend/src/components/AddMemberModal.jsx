@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { X } from 'lucide-react';
 
 const AddMemberModal = ({ isOpen, onClose, onAdd }) => {
-    const [name, setName] = useState('');
-    const [role, setRole] = useState('');
+    const [email, setEmail] = useState('');
     const [error, setError] = useState('');
 
     if (!isOpen) return null;
@@ -12,14 +11,13 @@ const AddMemberModal = ({ isOpen, onClose, onAdd }) => {
         e.preventDefault();
         setError('');
 
-        if (!name.trim() || !role.trim()) {
-            setError('Both Name and Role are required.');
+        if (!email.trim()) {
+            setError('Email is required.');
             return;
         }
 
-        onAdd({ name, role });
-        setName('');
-        setRole('');
+        onAdd({ email });
+        setEmail('');
         onClose();
     };
 
@@ -43,31 +41,20 @@ const AddMemberModal = ({ isOpen, onClose, onAdd }) => {
                     {error && <div className="text-red-500 text-sm">{error}</div>}
 
                     <div>
-                        <label htmlFor="memberName" className="block text-sm font-medium text-slate-700 mb-1">
-                            Name
+                        <label htmlFor="memberEmail" className="block text-sm font-medium text-slate-700 mb-1">
+                            Email Address
                         </label>
                         <input
-                            type="text"
-                            id="memberName"
-                            value={name}
-                            onChange={(e) => setName(e.target.value)}
+                            type="email"
+                            id="memberEmail"
+                            value={email}
+                            onChange={(e) => setEmail(e.target.value)}
                             className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="e.g. Jane Doe"
+                            placeholder="colleague@example.com"
                         />
-                    </div>
-
-                    <div>
-                        <label htmlFor="memberRole" className="block text-sm font-medium text-slate-700 mb-1">
-                            Role
-                        </label>
-                        <input
-                            type="text"
-                            id="memberRole"
-                            value={role}
-                            onChange={(e) => setRole(e.target.value)}
-                            className="w-full px-3 py-2 border border-slate-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500"
-                            placeholder="e.g. Lead Developer"
-                        />
+                        <p className="mt-1 text-xs text-slate-500">
+                            Enter the email address of the registered user you want to add.
+                        </p>
                     </div>
 
                     <div className="flex justify-end space-x-3 pt-4">

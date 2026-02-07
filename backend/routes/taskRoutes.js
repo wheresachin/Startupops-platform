@@ -6,6 +6,7 @@ const { protect } = require('../middleware/authMiddleware');
 // Task Routes
 router.route('/').post(protect, createTask).get(protect, getTasks);
 router.route('/:id').put(protect, updateTask).delete(protect, deleteTask);
+router.route('/:id/comments').post(protect, require('../controllers/taskController').addTaskComment);
 
 // Milestone Routes (For simplicity, nested here or separate? Keep simple)
 router.post('/milestones', protect, createMilestone);

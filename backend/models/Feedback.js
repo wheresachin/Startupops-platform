@@ -1,8 +1,13 @@
 const mongoose = require('mongoose');
 
 const feedbackSchema = new mongoose.Schema({
+    startup: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Startup',
+        required: true,
+    },
     user: {
-        type: String, // Name or identifier of the person giving feedback
+        type: String, // Name or Email of the person giving feedback
         required: true,
     },
     rating: {
@@ -20,12 +25,8 @@ const feedbackSchema = new mongoose.Schema({
         enum: ['New', 'Reviewed', 'Implemented'],
         default: 'New',
     },
-    startup: {
-        type: mongoose.Schema.Types.ObjectId,
-        ref: 'Startup',
-        required: true,
-    },
 }, { timestamps: true });
 
 const Feedback = mongoose.model('Feedback', feedbackSchema);
+
 module.exports = Feedback;

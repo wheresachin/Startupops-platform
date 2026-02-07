@@ -31,9 +31,9 @@ export const AuthProvider = ({ children }) => {
         }
     };
 
-    const signup = async (name, email, password, role) => {
+    const signup = async (name, email, password, role, username) => {
         try {
-            const { data } = await axios.post('/api/auth/register', { name, email, password, role });
+            const { data } = await axios.post('/api/auth/register', { name, email, password, role, username });
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             toast.success('Registration successful!');
@@ -50,8 +50,13 @@ export const AuthProvider = ({ children }) => {
         toast.success('Logged out successfully');
     };
 
+    const updateUser = (userData) => {
+        setUser(userData);
+        localStorage.setItem('userInfo', JSON.stringify(userData));
+    };
+
     return (
-        <AuthContext.Provider value={{ user, login, signup, logout, loading }}>
+        <AuthContext.Provider value={{ user, login, signup, logout, updateUser, loading }}>
             {children}
         </AuthContext.Provider>
     );

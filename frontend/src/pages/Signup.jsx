@@ -5,6 +5,7 @@ import { User, Mail, Lock, Briefcase, ArrowRight } from 'lucide-react';
 
 const Signup = () => {
     const [name, setName] = useState('');
+    const [username, setUsername] = useState('');
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [role, setRole] = useState('Founder');
@@ -13,7 +14,7 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await signup(name, email, password, role);
+        const success = await signup(name, email, password, role, username);
         if (success) {
             navigate('/dashboard');
         }
@@ -55,6 +56,27 @@ const Signup = () => {
                                     placeholder="Your Name"
                                     value={name}
                                     onChange={(e) => setName(e.target.value)}
+                                />
+                            </div>
+                        </div>
+
+                        <div>
+                            <label htmlFor="username" className="block text-sm font-medium text-slate-700">
+                                Username
+                            </label>
+                            <div className="mt-1 relative rounded-md shadow-sm">
+                                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                    <span className="text-slate-400 text-sm font-bold">@</span>
+                                </div>
+                                <input
+                                    id="username"
+                                    name="username"
+                                    type="text"
+                                    required
+                                    className="focus:ring-blue-500 focus:border-blue-500 block w-full pl-10 sm:text-sm border-slate-300 rounded-md py-2"
+                                    placeholder="username"
+                                    value={username}
+                                    onChange={(e) => setUsername(e.target.value)}
                                 />
                             </div>
                         </div>

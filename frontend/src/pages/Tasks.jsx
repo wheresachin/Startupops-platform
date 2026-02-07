@@ -1,21 +1,54 @@
 import React, { useState, useEffect } from 'react';
-import { getTasks, getKPIs } from '../services/mockData';
+import axios from 'axios';
 import { Plus, MoreVertical, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '../context/AuthContext';
+import toast from 'react-hot-toast';
 
 import AddTaskModal from '../components/AddTaskModal';
 
 const Tasks = () => {
+    const { user } = useAuth();
     const [tasks, setTasks] = useState([]);
-    const [milestones, setMilestones] = useState(null);
+    const [milestones, setMilestones] = useState({ completed: 0, total: 0 });
+    const [team, setTeam] = useState([]);
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState(null);
     const [activeMenuTaskId, setActiveMenuTaskId] = useState(null);
+    const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        getTasks().then(setTasks);
-        getKPIs().then(data => setMilestones(data.milestones));
-    }, []);
+        if (user?.startup) {
+            fetchData();
+        } else {
+            setIsLoading(false);
+        }
+    }, [user]);
+
+    const fetchData = async () => {
+        try {
+            const [tasksRes, milestonesRes, startupRes] = await Promise.all([
+                axios.get('/api/tasks', { headers: { Authorization: `Bearer ${user.token}` } }),
+                axios.get('/api/tasks/milestones/all', { headers: { Authorization: `Bearer ${user.token}` } }), // Corrected endpoint
+                axios.get(`/api/startups/${user.startup}`, { headers: { Authorization: `Bearer ${user.token}` } })
+            ]);
+
+            setTasks(tasksRes.data);
+
+            // Calculate milestone progress
+            // If milestonesRes.data is array of milestones
+            const milestonesData = milestonesRes.data || [];
+            const completed = milestonesData.filter(m => m.status === 'Completed').length;
+            setMilestones({ completed, total: milestonesData.length });
+
+            setTeam(startupRes.data.team || []);
+        } catch (error) {
+            console.error(error);
+            toast.error('Failed to load tasks data');
+        } finally {
+            setIsLoading(false);
+        }
+    };
 
     // Close menu when clicking outside
     useEffect(() => {
@@ -24,28 +57,71 @@ const Tasks = () => {
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
-    const handleAddTask = (newTask) => {
-        const taskWithId = {
-            ...newTask,
-            id: Date.now(),
-        };
-        setTasks([...tasks, taskWithId]);
-        setIsAddTaskModalOpen(false);
+    const handleAddTask = async (newTask) => {
+        try {
+            const { data } = await axios.post('/api/tasks', newTask, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            setTasks([...tasks, data]);
+            setIsAddTaskModalOpen(false);
+            toast.success('Task added successfully');
+            // Re-fetch to normalize data if needed, or simply append. 
+            // The backend returns the created task. 
+            // If we need populated assignee, we might need to fetch again or manually add assignee object from team list.
+            // For now, let's just re-fetch to be safe and simple
+            fetchData();
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to add task');
+        }
     };
 
-    const handleUpdateTask = (updatedTask) => {
-        setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
-        setIsAddTaskModalOpen(false);
-        setTaskToEdit(null);
+    const handleUpdateTask = async (updatedTask) => {
+        try {
+            // First update task details
+            const { data } = await axios.put(`/api/tasks/${updatedTask._id}`, updatedTask, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+
+            // If there's a new comment coming from the modal state (passed inside updatedTask for convenience)
+            if (updatedTask.newComment) {
+                await axios.post(`/api/tasks/${updatedTask._id}/comments`, { text: updatedTask.newComment }, {
+                    headers: { Authorization: `Bearer ${user.token}` }
+                });
+            }
+
+            // We need to fetch data again to get the populated comments
+            fetchData();
+
+            setIsAddTaskModalOpen(false);
+            setTaskToEdit(null);
+            toast.success('Task updated successfully');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to update task');
+        }
     };
 
-    const handleDeleteTask = (taskId) => {
-        setTasks(tasks.filter(t => t.id !== taskId));
-        setActiveMenuTaskId(null);
+    const handleDeleteTask = async (taskId) => {
+        if (!window.confirm('Are you sure you want to delete this task?')) return;
+        try {
+            await axios.delete(`/api/tasks/${taskId}`, {
+                headers: { Authorization: `Bearer ${user.token}` }
+            });
+            setTasks(tasks.filter(t => t._id !== taskId));
+            setActiveMenuTaskId(null);
+            toast.success('Task deleted');
+        } catch (error) {
+            toast.error(error.response?.data?.message || 'Failed to delete task');
+        }
     };
 
     const openEditModal = (task) => {
-        setTaskToEdit(task);
+        // Need to format task for modal if necessary. 
+        // Modal expects assignee as ID. Backend task has assignee as Object (populated).
+        const formattedTask = {
+            ...task,
+            assignee: task.assignee?._id || task.assignee // handle populated or unpopulated
+        };
+        setTaskToEdit(formattedTask);
         setIsAddTaskModalOpen(true);
         setActiveMenuTaskId(null);
     };
@@ -55,7 +131,7 @@ const Tasks = () => {
         setIsAddTaskModalOpen(true);
     };
 
-    if (!tasks || !milestones) return <div>Loading...</div>;
+    if (isLoading) return <div>Loading...</div>;
 
     const columns = ['Todo', 'In Progress', 'Done'];
 
@@ -81,7 +157,7 @@ const Tasks = () => {
                     <div className="w-32 h-2 bg-slate-100 rounded-full overflow-hidden">
                         <div
                             className="h-full bg-blue-600 rounded-full"
-                            style={{ width: `${(milestones.completed / milestones.total) * 100}%` }}
+                            style={{ width: `${milestones.total > 0 ? (milestones.completed / milestones.total) * 100 : 0}%` }}
                         ></div>
                     </div>
                     <span className="text-sm font-bold text-slate-900">{milestones.completed}/{milestones.total}</span>
@@ -114,7 +190,7 @@ const Tasks = () => {
                                             initial={{ opacity: 0, scale: 0.9 }}
                                             animate={{ opacity: 1, scale: 1 }}
                                             exit={{ opacity: 0, scale: 0.9 }}
-                                            key={task.id}
+                                            key={task._id}
                                             className="bg-white p-4 rounded-lg shadow-sm border border-slate-200 hover:shadow-md transition-shadow cursor-pointer group relative"
                                         >
                                             <div className="flex justify-between items-start mb-2">
@@ -125,13 +201,13 @@ const Tasks = () => {
                                                     <button
                                                         onClick={(e) => {
                                                             e.stopPropagation();
-                                                            setActiveMenuTaskId(activeMenuTaskId === task.id ? null : task.id);
+                                                            setActiveMenuTaskId(activeMenuTaskId === task._id ? null : task._id);
                                                         }}
                                                         className="text-slate-400 hover:text-slate-600 opacity-0 group-hover:opacity-100 transition-opacity"
                                                     >
                                                         <MoreVertical className="w-4 h-4" />
                                                     </button>
-                                                    {activeMenuTaskId === task.id && (
+                                                    {activeMenuTaskId === task._id && (
                                                         <div className="absolute right-0 mt-1 w-32 bg-white rounded-md shadow-lg border border-slate-200 z-10 py-1">
                                                             <button
                                                                 onClick={(e) => {
@@ -145,7 +221,7 @@ const Tasks = () => {
                                                             <button
                                                                 onClick={(e) => {
                                                                     e.stopPropagation();
-                                                                    handleDeleteTask(task.id);
+                                                                    handleDeleteTask(task._id);
                                                                 }}
                                                                 className="block w-full text-left px-4 py-2 text-sm text-red-600 hover:bg-red-50 transition-colors"
                                                             >
@@ -159,15 +235,16 @@ const Tasks = () => {
                                             <div className="flex items-center justify-between mt-3">
                                                 <div className="flex items-center space-x-2">
                                                     <div className="w-6 h-6 rounded-full bg-blue-100 border-2 border-white flex items-center justify-center text-[10px] text-blue-700 font-bold">
-                                                        {task.assignee ? task.assignee.charAt(0).toUpperCase() : '?'}
+                                                        {task.assignee?.name ? task.assignee.name.charAt(0).toUpperCase() : '?'}
                                                     </div>
                                                     <span className="text-xs text-slate-600 font-medium">
-                                                        {task.assignee || 'Unassigned'}
+                                                        {task.assignee?.name || 'Unassigned'}
                                                     </span>
                                                 </div>
                                                 <div className="flex items-center text-slate-400 text-xs">
                                                     <Calendar className="w-3 h-3 mr-1" />
-                                                    <span>2d</span>
+                                                    {/* Placeholder for date/deadline */}
+                                                    <span>Today</span>
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -192,6 +269,7 @@ const Tasks = () => {
                 onAdd={handleAddTask}
                 onUpdate={handleUpdateTask}
                 initialData={taskToEdit}
+                team={team}
             />
         </div>
     );

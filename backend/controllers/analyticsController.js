@@ -1,50 +1,72 @@
 const Task = require('../models/Task');
-const Milestone = require('../models/Milestone');
 const Feedback = require('../models/Feedback');
 
-// @desc    Get analytics overview
-// @route   GET /api/analytics/overview
+// @desc    Get analytics data
+// @route   GET /api/analytics
 // @access  Private
-exports.getAnalyticsOverview = async (req, res) => {
-    const startupId = req.user.startup;
-
-    if (!startupId) {
-        return res.status(400).json({ message: 'User does not belong to a startup' });
-    }
-
+exports.getAnalytics = async (req, res) => {
     try {
-        // Task Analytics
-        const totalTasks = await Task.countDocuments({ startup: startupId });
-        const completedTasks = await Task.countDocuments({ startup: startupId, status: 'Done' });
+        const startupId = req.user.startup;
 
-        // Milestone Analytics
-        const totalMilestones = await Milestone.countDocuments({ startup: startupId });
-        const completedMilestones = await Milestone.countDocuments({ startup: startupId, status: 'Completed' });
+        // 1. Task Statistics
+        const tasks = await Task.find({ startup: startupId });
 
-        // Feedback Analytics
-        const totalFeedback = await Feedback.countDocuments({ startup: startupId });
-        const feedbackAvg = await Feedback.aggregate([
-            { $match: { startup: startupId } },
-            { $group: { _id: null, avgRating: { $avg: "$rating" } } }
-        ]);
-        const avgRating = feedbackAvg.length > 0 ? feedbackAvg[0].avgRating.toFixed(1) : 0;
+        const taskStats = [
+            { name: 'Todo', value: tasks.filter(t => t.status === 'Todo').length },
+            { name: 'In Progress', value: tasks.filter(t => t.status === 'In Progress').length },
+            { name: 'Done', value: tasks.filter(t => t.status === 'Done').length },
+        ];
+
+        // 2. Task Velocity (Simulated/Simplified for now: Tasks by Priority)
+        // Ideally this would be tasks completed over time, but we need createdAt/updatedAt aggregation.
+        // Let's do Tasks by Priority for the "Area Chart" or similar.
+        const tasksByPriority = [
+            { name: 'Low', tasks: tasks.filter(t => t.priority === 'Low').length },
+            { name: 'Medium', tasks: tasks.filter(t => t.priority === 'Medium').length },
+            { name: 'High', tasks: tasks.filter(t => t.priority === 'High').length },
+        ];
+
+        // 3. Feedback Statistics
+        const feedback = await Feedback.find({ startup: startupId });
+
+        const feedbackStats = [
+            { name: '5 Stars', feedback: feedback.filter(f => f.rating === 5).length },
+            { name: '4 Stars', feedback: feedback.filter(f => f.rating === 4).length },
+            { name: '3 Stars', feedback: feedback.filter(f => f.rating === 3).length },
+            { name: '2 Stars', feedback: feedback.filter(f => f.rating === 2).length },
+            { name: '1 Star', feedback: feedback.filter(f => f.rating === 1).length },
+        ];
+
+        // Reshape data to match Recharts expected format in frontend if needed
+        // Frontend expects a single array `data` for charts?
+        // Let's look at frontend:
+        // AreaChart data keys: 'name', 'tasks' -> used for Task Velocity. 
+        // BarChart data keys: 'name', 'feedback' -> used for Feedback Trend.
+
+        // We can send multiple datasets or a combined one. 
+        // The frontend `Analytics.jsx` uses `data` for BOTH charts. This implies the `data` array has objects with BOTH keys?
+        // AreaChart uses `dataKey="tasks"`
+        // BarChart uses `dataKey="feedback"`
+        // XAxis uses `dataKey="name"` for both.
+
+        // This means the `data` array must share the same `name` (X-axis labels).
+        // BUT Task Velocity and Feedback Trend usually have different X-axes (Time vs Rating).
+        // The current frontend mock data likely shares "Jan", "Feb", etc.
+        // Since I can't easily change the frontend charts structure deeply without breaking styling, I should try to adapt the backend to provide meaningful data that FITS the existing chart components, OR update the frontend to use separate data sources.
+
+        // DECISION: Update Frontend to use `taskData` and `feedbackData` separately is cleaner.
+        // So I will send an object `{ taskData, feedbackData }`.
+
+        // Let's prepare meaningful data:
+        // Task Data (Priority Distribution seems good for "Task Velocity" spot if we rename it, but let's stick to "Tasks" count)
+        // Actually, let's use the `tasksByPriority` for the first chart.
+        // And `feedbackStats` for the second chart.
 
         res.json({
-            tasks: {
-                total: totalTasks,
-                completed: completedTasks,
-                pending: totalTasks - completedTasks,
-                completionRate: totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0,
-            },
-            milestones: {
-                total: totalMilestones,
-                completed: completedMilestones,
-            },
-            feedback: {
-                total: totalFeedback,
-                avgRating,
-            },
+            taskData: tasksByPriority,
+            feedbackData: feedbackStats
         });
+
     } catch (error) {
         res.status(500).json({ message: error.message });
     }
