@@ -16,7 +16,7 @@ const Signup = () => {
         e.preventDefault();
         const success = await signup(name, email, password, role, username);
         if (success) {
-            navigate('/dashboard');
+            navigate('/app/dashboard');
         }
     };
 

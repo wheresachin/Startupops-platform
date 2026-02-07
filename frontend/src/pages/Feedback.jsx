@@ -27,7 +27,6 @@ const Feedback = () => {
             setFeedback(data);
         } catch (error) {
             console.error('Error fetching feedback:', error);
-            // toast.error('Failed to load feedback');
         } finally {
             setIsLoading(false);
         }
@@ -55,24 +54,6 @@ const Feedback = () => {
             toast.success('Feedback deleted');
         } catch (error) {
             toast.error('Failed to delete feedback');
-        }
-    };
-
-    // Simulation for demo purposes: Create a random feedback entry
-    const handleSimulateFeedback = async () => {
-        const dummyFeedback = {
-            startupId: user.startup,
-            user: `User${Math.floor(Math.random() * 1000)}`,
-            rating: Math.floor(Math.random() * 2) + 4, // 4 or 5
-            comment: 'This is a test feedback submitted via the simulated public form.',
-        };
-
-        try {
-            const { data } = await axios.post('/api/feedback', dummyFeedback);
-            setFeedback([data, ...feedback]);
-            toast.success('New feedback received!');
-        } catch (error) {
-            toast.error('Failed to submit test feedback');
         }
     };
 

@@ -14,12 +14,12 @@ const Sidebar = () => {
     };
 
     const allNavItems = [
-        { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard, roles: ['Founder', 'Team'] },
-        { name: 'Startup Profile', path: '/profile', icon: Building2, roles: ['Founder'] },
-        { name: 'Tasks & Milestones', path: '/tasks', icon: CheckSquare, roles: ['Founder', 'Team'] },
-        { name: 'Feedback', path: '/feedback', icon: MessageSquare, roles: ['Founder', 'Team'] },
-        { name: 'Analytics', path: '/analytics', icon: BarChart3, roles: ['Founder'] },
-        { name: 'Pitch Generator', path: '/pitch', icon: Sparkles, roles: ['Founder'] },
+        { name: 'Dashboard', path: '/app/dashboard', icon: LayoutDashboard, roles: ['Founder', 'Team'] },
+        { name: 'Startup Profile', path: '/app/profile', icon: Building2, roles: ['Founder'] },
+        { name: 'Tasks & Milestones', path: '/app/tasks', icon: CheckSquare, roles: ['Founder', 'Team'] },
+        { name: 'Feedback', path: '/app/feedback', icon: MessageSquare, roles: ['Founder', 'Team'] },
+        { name: 'Analytics', path: '/app/analytics', icon: BarChart3, roles: ['Founder'] },
+        { name: 'Pitch Generator', path: '/app/pitch', icon: Sparkles, roles: ['Founder'] },
     ];
 
     const navItems = allNavItems.filter(item => item.roles.includes(user?.role || 'Founder'));

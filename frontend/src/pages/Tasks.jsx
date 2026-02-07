@@ -29,14 +29,12 @@ const Tasks = () => {
         try {
             const [tasksRes, milestonesRes, startupRes] = await Promise.all([
                 axios.get('/api/tasks', { headers: { Authorization: `Bearer ${user.token}` } }),
-                axios.get('/api/tasks/milestones/all', { headers: { Authorization: `Bearer ${user.token}` } }), // Corrected endpoint
+                axios.get('/api/tasks/milestones/all', { headers: { Authorization: `Bearer ${user.token}` } }),
                 axios.get(`/api/startups/${user.startup}`, { headers: { Authorization: `Bearer ${user.token}` } })
             ]);
 
             setTasks(tasksRes.data);
 
-            // Calculate milestone progress
-            // If milestonesRes.data is array of milestones
             const milestonesData = milestonesRes.data || [];
             const completed = milestonesData.filter(m => m.status === 'Completed').length;
             setMilestones({ completed, total: milestonesData.length });
@@ -65,10 +63,6 @@ const Tasks = () => {
             setTasks([...tasks, data]);
             setIsAddTaskModalOpen(false);
             toast.success('Task added successfully');
-            // Re-fetch to normalize data if needed, or simply append. 
-            // The backend returns the created task. 
-            // If we need populated assignee, we might need to fetch again or manually add assignee object from team list.
-            // For now, let's just re-fetch to be safe and simple
             fetchData();
         } catch (error) {
             toast.error(error.response?.data?.message || 'Failed to add task');
@@ -82,7 +76,7 @@ const Tasks = () => {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
 
-            // If there's a new comment coming from the modal state (passed inside updatedTask for convenience)
+            // If there's a new comment coming from the modal state
             if (updatedTask.newComment) {
                 await axios.post(`/api/tasks/${updatedTask._id}/comments`, { text: updatedTask.newComment }, {
                     headers: { Authorization: `Bearer ${user.token}` }
@@ -115,11 +109,9 @@ const Tasks = () => {
     };
 
     const openEditModal = (task) => {
-        // Need to format task for modal if necessary. 
-        // Modal expects assignee as ID. Backend task has assignee as Object (populated).
         const formattedTask = {
             ...task,
-            assignee: task.assignee?._id || task.assignee // handle populated or unpopulated
+            assignee: task.assignee?._id || task.assignee
         };
         setTaskToEdit(formattedTask);
         setIsAddTaskModalOpen(true);
@@ -243,7 +235,6 @@ const Tasks = () => {
                                                 </div>
                                                 <div className="flex items-center text-slate-400 text-xs">
                                                     <Calendar className="w-3 h-3 mr-1" />
-                                                    {/* Placeholder for date/deadline */}
                                                     <span>Today</span>
                                                 </div>
                                             </div>
@@ -262,7 +253,6 @@ const Tasks = () => {
                 </div>
             </div>
 
-            {/* Add/Edit Task Modal */}
             <AddTaskModal
                 isOpen={isAddTaskModalOpen}
                 onClose={() => setIsAddTaskModalOpen(false)}
