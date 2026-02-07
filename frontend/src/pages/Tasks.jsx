@@ -1,20 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { getTasks, getKPIs } from '../services/mockData';
+import { getTasks, getKPIs, createTask, updateTask, deleteTask } from '../services/api';
 import { Plus, MoreVertical, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import toast from 'react-hot-toast';
 
 import AddTaskModal from '../components/AddTaskModal';
 
 const Tasks = () => {
     const [tasks, setTasks] = useState([]);
-    const [milestones, setMilestones] = useState(null);
+    const [milestones, setMilestones] = useState({ total: 0, completed: 0 }); // Initialize with default structure
     const [isAddTaskModalOpen, setIsAddTaskModalOpen] = useState(false);
     const [taskToEdit, setTaskToEdit] = useState(null);
     const [activeMenuTaskId, setActiveMenuTaskId] = useState(null);
+    const [loading, setLoading] = useState(true);
+
+    const fetchData = async () => {
+        try {
+            setLoading(true);
+            const [tasksData, kpiData] = await Promise.all([getTasks(), getKPIs()]);
+            setTasks(tasksData);
+            setMilestones(kpiData.milestones);
+        } catch (error) {
+            console.error("Failed to fetch data:", error);
+            toast.error("Failed to load tasks.");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     useEffect(() => {
-        getTasks().then(setTasks);
-        getKPIs().then(data => setMilestones(data.milestones));
+        fetchData();
     }, []);
 
     // Close menu when clicking outside
@@ -24,24 +39,49 @@ const Tasks = () => {
         return () => document.removeEventListener('click', handleClickOutside);
     }, []);
 
-    const handleAddTask = (newTask) => {
-        const taskWithId = {
-            ...newTask,
-            id: Date.now(),
-        };
-        setTasks([...tasks, taskWithId]);
-        setIsAddTaskModalOpen(false);
+    const handleAddTask = async (newTask) => {
+        try {
+            const createdTask = await createTask(newTask);
+            setTasks([...tasks, createdTask]);
+            setIsAddTaskModalOpen(false);
+            toast.success("Task created successfully");
+            fetchData(); // Refresh KPIs
+        } catch (error) {
+            console.error("Failed to create task:", error);
+            toast.error("Failed to create task");
+        }
     };
 
-    const handleUpdateTask = (updatedTask) => {
-        setTasks(tasks.map(t => t.id === updatedTask.id ? updatedTask : t));
-        setIsAddTaskModalOpen(false);
-        setTaskToEdit(null);
+    const handleUpdateTask = async (updatedTask) => {
+        try {
+            // Optimistic update
+            const oldTasks = [...tasks];
+            setTasks(tasks.map(t => t._id === updatedTask._id ? { ...t, ...updatedTask } : t));
+
+            await updateTask(updatedTask._id, updatedTask);
+            setIsAddTaskModalOpen(false);
+            setTaskToEdit(null);
+            toast.success("Task updated successfully");
+            fetchData(); // Refresh to ensure sync and KPIs
+        } catch (error) {
+            console.error("Failed to update task:", error);
+            toast.error("Failed to update task");
+            fetchData(); // Revert on error
+        }
     };
 
-    const handleDeleteTask = (taskId) => {
-        setTasks(tasks.filter(t => t.id !== taskId));
-        setActiveMenuTaskId(null);
+    const handleDeleteTask = async (taskId) => {
+        if (!window.confirm("Are you sure you want to delete this task?")) return;
+        try {
+            await deleteTask(taskId);
+            setTasks(tasks.filter(t => t._id !== taskId));
+            setActiveMenuTaskId(null);
+            toast.success("Task deleted");
+            fetchData(); // Refresh KPIs
+        } catch (error) {
+            console.error("Failed to delete task:", error);
+            toast.error("Failed to delete task");
+        }
     };
 
     const openEditModal = (task) => {
