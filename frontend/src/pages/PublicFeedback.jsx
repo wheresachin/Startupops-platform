@@ -2,9 +2,11 @@ import React, { useState } from 'react';
 import { Star, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import toast from 'react-hot-toast';
-import { addFeedback } from '../services/mockData';
+import axios from 'axios';
+import { useParams } from 'react-router-dom';
 
 const PublicFeedback = () => {
+    const { startupId } = useParams();
     const [rating, setRating] = useState(0);
     const [hoverRating, setHoverRating] = useState(0);
     const [name, setName] = useState('');
@@ -12,7 +14,7 @@ const PublicFeedback = () => {
     const [comment, setComment] = useState('');
     const [submitted, setSubmitted] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
         if (rating === 0) {
             toast.error('Please select a rating');
@@ -27,12 +29,26 @@ const PublicFeedback = () => {
             return;
         }
 
-        // Save feedback
-        addFeedback({ name, email, rating, comment })
-            .then(() => {
-                setSubmitted(true);
-                toast.success('Thank you for your feedback!');
+        if (!startupId) {
+            toast.error('Invalid feedback link');
+            return;
+        }
+
+        try {
+            await axios.post('/api/feedback', {
+                startupId,
+                user: name, // Using name as the user identifier for public feedback
+                rating,
+                comment,
+                // email is collected but model doesn't store it explicitly as a separate field currently, 
+                // maybe append to comment or update model. For now adhering to existing model: user, rating, comment, startupId
             });
+            setSubmitted(true);
+            toast.success('Thank you for your feedback!');
+        } catch (error) {
+            console.error('Error submitting feedback:', error);
+            toast.error('Failed to submit feedback. Please try again.');
+        }
     };
 
     if (submitted) {

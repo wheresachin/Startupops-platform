@@ -11,6 +11,7 @@ import Signup from './pages/Signup';
 import PitchGenerator from './pages/PitchGenerator';
 import LandingPage from './pages/LandingPage';
 import PublicFeedback from './pages/PublicFeedback';
+import Pricing from './pages/Pricing';
 
 import { AuthProvider, useAuth } from './context/AuthContext';
 import { Toaster } from 'react-hot-toast';
@@ -38,7 +39,8 @@ function App() {
           <Route path="/" element={<LandingPage />} />
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<Signup />} />
-          <Route path="/submit-feedback" element={<PublicFeedback />} />
+          <Route path="/pricing" element={<Pricing />} />
+          <Route path="/submit-feedback/:startupId" element={<PublicFeedback />} />
           <Route path="/app" element={<Layout />}>
             <Route index element={<Navigate to="/app/dashboard" replace />} />
             <Route path="dashboard" element={<Dashboard />} />

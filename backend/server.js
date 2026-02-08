@@ -29,6 +29,7 @@ app.use('/api/tasks', taskRoutes);
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/feedback', require('./routes/feedbackRoutes'));
 app.use('/api/analytics', analyticsRoutes);
+app.use('/api/payment', require('./routes/paymentRoutes'));
 
 app.get('/', (req, res) => {
     res.send('StartupOps API is running');

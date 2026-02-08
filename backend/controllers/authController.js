@@ -1,4 +1,5 @@
 const User = require('../models/User');
+const Startup = require('../models/Startup');
 const jwt = require('jsonwebtoken');
 
 const generateToken = (id) => {
@@ -29,12 +30,24 @@ exports.registerUser = async (req, res) => {
         });
 
         if (user) {
+            // Automatically create a startup for the founder
+            if (role === 'Founder') {
+                const startup = await Startup.create({
+                    name: `${name}'s Startup`,
+                    founder: user._id,
+                    team: [user._id]
+                });
+                user.startup = startup._id;
+                await user.save();
+            }
+
             res.status(201).json({
                 _id: user._id,
                 name: user.name,
                 email: user.email,
                 username: user.username,
                 role: user.role,
+                startup: user.startup,
                 token: generateToken(user._id),
             });
         } else {

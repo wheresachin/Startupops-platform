@@ -29,6 +29,33 @@ const userSchema = new mongoose.Schema({
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Startup',
     },
+    subscription: {
+        plan: {
+            type: String,
+            enum: ['Free', 'Pro'],
+            default: 'Free',
+        },
+        razorpaySubscriptionId: {
+            type: String,
+        },
+        razorpayCustomerId: {
+            type: String,
+        },
+        razorpayPaymentId: {
+            type: String,
+        },
+        status: {
+            type: String, // active, expired, cancelled
+            enum: ['active', 'expired', 'cancelled'],
+            default: 'active',
+        },
+        startDate: {
+            type: Date,
+        },
+        endDate: {
+            type: Date,
+        },
+    },
 }, { timestamps: true });
 
 // Encrypt password before saving

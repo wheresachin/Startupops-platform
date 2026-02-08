@@ -1,12 +1,16 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
 import { getKPIs, getAnalytics } from '../services/mockData';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
-import { CheckCircle2, ListTodo, MessageSquare, TrendingUp } from 'lucide-react';
+import { CheckCircle2, ListTodo, MessageSquare, TrendingUp, Crown, Sparkles } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const Dashboard = () => {
     const [kpis, setKpis] = useState(null);
     const [analytics, setAnalytics] = useState([]);
+    const { user } = useAuth();
+    const navigate = useNavigate();
 
     useEffect(() => {
         getKPIs().then(setKpis);
@@ -22,13 +26,38 @@ const Dashboard = () => {
         { title: 'Milestones', value: `${kpis.milestones.completed}/${kpis.milestones.total}`, icon: TrendingUp, color: 'text-amber-600', bg: 'bg-amber-100' },
     ];
 
+    const isPro = user?.subscription?.plan === 'Pro';
+
     return (
         <div className="space-y-6">
-            <div className="flex justify-between items-center">
-                <h1 className="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
-                <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
-                    + New Task
-                </button>
+            <div className="flex justify-between items-center flex-wrap gap-4">
+                <div className="flex items-center gap-3">
+                    <h1 className="text-2xl font-bold text-slate-800">Dashboard Overview</h1>
+                    {isPro ? (
+                        <span className="flex items-center gap-1 px-3 py-1 bg-gradient-to-r from-yellow-400 to-yellow-500 text-yellow-900 rounded-full text-sm font-semibold">
+                            <Crown className="w-4 h-4" />
+                            Pro
+                        </span>
+                    ) : (
+                        <span className="flex items-center gap-1 px-3 py-1 bg-gray-200 text-gray-700 rounded-full text-sm font-semibold">
+                            Free
+                        </span>
+                    )}
+                </div>
+                <div className="flex gap-2">
+                    {!isPro && (
+                        <button
+                            onClick={() => navigate('/pricing')}
+                            className="px-4 py-2 bg-gradient-to-r from-indigo-600 to-purple-600 text-white rounded-lg hover:from-indigo-700 hover:to-purple-700 transition flex items-center gap-2 font-semibold"
+                        >
+                            <Sparkles className="w-4 h-4" />
+                            Upgrade to Pro
+                        </button>
+                    )}
+                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition">
+                        + New Task
+                    </button>
+                </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
