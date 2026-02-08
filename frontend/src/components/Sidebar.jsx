@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, Building2, CheckSquare, MessageSquare, BarChart3, LogOut, Sparkles, X, CreditCard } from 'lucide-react';
+import { LayoutDashboard, Building2, CheckSquare, MessageSquare, BarChart3, LogOut, Sparkles, X, CreditCard, Wallet } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useAuth } from '../context/AuthContext';
 
@@ -22,6 +22,7 @@ const Sidebar = ({ isMobileOpen, onMobileClose }) => {
         { name: 'Feedback', path: '/app/feedback', icon: MessageSquare, roles: ['Founder', 'Team'] },
         { name: 'Analytics', path: '/app/analytics', icon: BarChart3, roles: ['Founder'] },
         { name: 'Pitch Generator', path: '/app/pitch', icon: Sparkles, roles: ['Founder'] },
+        { name: 'Resources', path: '/app/resources', icon: Wallet, roles: ['Founder'] },
         { name: 'Subscription', path: '/app/subscription', icon: CreditCard, roles: ['Founder'] },
 
         // Investor Items

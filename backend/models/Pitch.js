@@ -1,29 +1,34 @@
 const mongoose = require('mongoose');
 
-const pitchSchema = new mongoose.Schema({
+const pitchSchema = mongoose.Schema({
     startup: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Startup',
-        required: true,
+        required: true
     },
     script: {
-        type: String,
-        required: true,
+        type: String
     },
     presentation: {
-        type: Object, // Stores slide-by-slide structure
-        default: {},
+        slides: [{
+            number: Number,
+            title: String,
+            content: [String],
+            visuals: String,
+            notes: String
+        }]
     },
-    qaPrep: {
-        type: Array, // Array of Q&A objects
-        default: [],
-    },
-    generatedBy: {
-        type: String,
-        default: 'Gemini AI',
-    },
-}, { timestamps: true });
+    qaPrep: [{
+        question: String,
+        answer: String,
+        keyPoints: [String]
+    }],
+    lastGenerated: {
+        type: Date,
+        default: Date.now
+    }
+}, {
+    timestamps: true
+});
 
-const Pitch = mongoose.model('Pitch', pitchSchema);
-
-module.exports = Pitch;
+module.exports = mongoose.model('Pitch', pitchSchema);

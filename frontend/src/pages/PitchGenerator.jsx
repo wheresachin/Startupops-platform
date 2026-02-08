@@ -4,7 +4,7 @@ import { Download, Copy, Check, Sparkles, Wand2, FileText, Presentation, HelpCir
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import toast from 'react-hot-toast';
-import ScriptPromptModal from '../components/ScriptPromptModal';
+
 
 const PitchGenerator = () => {
     const { user } = useAuth();
@@ -12,7 +12,8 @@ const PitchGenerator = () => {
     const [loading, setLoading] = useState(false);
     const [pitch, setPitch] = useState(null);
     const [copied, setCopied] = useState(false);
-    const [isModalOpen, setIsModalOpen] = useState(false);
+    const [customPrompt, setCustomPrompt] = useState('');
+    const [isGenerating, setIsGenerating] = useState(false);
 
     useEffect(() => {
         fetchSavedPitch();
@@ -30,48 +31,108 @@ const PitchGenerator = () => {
         }
     };
 
-    const generateScript = async (customPrompt = '') => {
-        setLoading(true);
+    // Core generation functions that return success status
+    const generateScriptCore = async (customPrompt = '') => {
         try {
             const { data } = await axios.post('/api/pitch/generate-script',
                 { customPrompt },
                 { headers: { Authorization: `Bearer ${user.token}` } }
             );
             setPitch(prev => ({ ...prev, script: data.script }));
-            toast.success('Pitch script generated!');
-            setIsModalOpen(false);
+            toast.success('Response generated!');
+            setCustomPrompt(''); // Clear input after sending
+            return true;
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to generate script');
-        } finally {
-            setLoading(false);
+            if (error.response?.status === 429) {
+                toast.error('API Limit Reached (429). Please wait a minute before retrying.');
+            } else {
+                toast.error(error.response?.data?.message || 'Failed to generate script');
+            }
+            return false;
         }
     };
 
-    const generatePresentation = async () => {
-        setLoading(true);
+    const generatePresentationCore = async () => {
         try {
             const { data } = await axios.post('/api/pitch/generate-presentation', {}, {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
             setPitch(prev => ({ ...prev, presentation: data.presentation }));
             toast.success('Presentation outline generated!');
+            return true;
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to generate presentation');
-        } finally {
-            setLoading(false);
+            if (error.response?.status === 429) {
+                toast.error('API Limit Reached (429). Please wait a minute before retrying.');
+            } else {
+                toast.error(error.response?.data?.message || 'Failed to generate presentation');
+            }
+            return false;
         }
     };
 
-    const generateQA = async () => {
-        setLoading(true);
+    const generateQACore = async () => {
         try {
             const { data } = await axios.post('/api/pitch/generate-qa', {}, {
                 headers: { Authorization: `Bearer ${user.token}` }
             });
             setPitch(prev => ({ ...prev, qaPrep: data.qaPrep }));
             toast.success('Q&A preparation generated!');
+            return true;
         } catch (error) {
-            toast.error(error.response?.data?.message || 'Failed to generate Q&A');
+            if (error.response?.status === 429) {
+                toast.error('API Limit Reached (429). Please wait a minute before retrying.');
+            } else {
+                toast.error(error.response?.data?.message || 'Failed to generate Q&A');
+            }
+            return false;
+        }
+    };
+
+    // Wrapper functions for individual buttons
+    const generateScript = async (customPrompt) => {
+        setLoading(true);
+        await generateScriptCore(customPrompt);
+        setLoading(false);
+    };
+
+    const generatePresentation = async () => {
+        setLoading(true);
+        await generatePresentationCore();
+        setLoading(false);
+    };
+
+    const generateQA = async () => {
+        setLoading(true);
+        await generateQACore();
+        setLoading(false);
+    };
+
+    // Handler for "Generate All" button
+    const handleGenerateAll = async () => {
+        setLoading(true);
+        try {
+            toast.loading('Generating complete pitch (this may take up to a minute)...', { id: 'generate-all' });
+
+            // Generate sequentially with 5s delay to avoid rate limits
+            const scriptSuccess = await generateScriptCore();
+            if (!scriptSuccess) throw new Error('Script generation failed');
+
+            await new Promise(r => setTimeout(r, 5000));
+
+            const presentationSuccess = await generatePresentationCore();
+            if (!presentationSuccess) throw new Error('Presentation generation failed');
+
+            await new Promise(r => setTimeout(r, 5000));
+
+            const qaSuccess = await generateQACore();
+            if (!qaSuccess) throw new Error('Q&A generation failed');
+
+            toast.success('Complete pitch generated successfully!', { id: 'generate-all' });
+        } catch (error) {
+            // Error is already handled/toasted in core functions or stopped here
+            if (error.message.includes('failed')) {
+                toast.error('Generation stopped due to error.', { id: 'generate-all' });
+            }
         } finally {
             setLoading(false);
         }
@@ -101,25 +162,7 @@ const PitchGenerator = () => {
                     <p className="text-slate-500">Generate investor-ready pitches powered by Gemini AI</p>
                 </div>
                 <button
-                    onClick={async () => {
-                        setLoading(true);
-                        try {
-                            toast.loading('Analyzing problem and generating complete pitch...', { id: 'generate-all' });
-
-                            // Generate all three in parallel
-                            await Promise.all([
-                                generateScript(),
-                                generatePresentation(),
-                                generateQA()
-                            ]);
-
-                            toast.success('Complete pitch generated!', { id: 'generate-all' });
-                        } catch (error) {
-                            toast.error('Failed to generate complete pitch', { id: 'generate-all' });
-                        } finally {
-                            setLoading(false);
-                        }
-                    }}
+                    onClick={handleGenerateAll}
                     disabled={loading}
                     className="flex items-center px-4 py-2 bg-gradient-to-r from-yellow-500 via-orange-500 to-red-500 text-white rounded-lg hover:from-yellow-600 hover:via-orange-600 hover:to-red-600 transition disabled:opacity-50 shadow-md text-sm font-medium"
                 >
@@ -163,8 +206,36 @@ const PitchGenerator = () => {
                         exit={{ opacity: 0, y: -20 }}
                         className="space-y-4"
                     >
+                        <div className="bg-white p-4 rounded-xl shadow-sm border border-slate-100 mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                                Chat with AI / Customize Pitch
+                            </label>
+                            <div className="flex gap-2">
+                                <textarea
+                                    value={customPrompt}
+                                    onChange={(e) => setCustomPrompt(e.target.value)}
+                                    placeholder="Type 'Hi' to chat, or instructions like 'Focus on AI'..."
+                                    className="flex-1 p-3 border border-slate-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none h-20 text-sm"
+                                    onKeyDown={(e) => {
+                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                            e.preventDefault();
+                                            generateScript(customPrompt);
+                                        }
+                                    }}
+                                />
+                                <button
+                                    onClick={() => generateScript(customPrompt)}
+                                    disabled={loading || !customPrompt.trim()}
+                                    className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex flex-col items-center justify-center gap-1 min-w-[80px]"
+                                >
+                                    {loading ? <Loader2 className="w-5 h-5 animate-spin" /> : <Wand2 className="w-5 h-5" />}
+                                    <span className="text-xs">Send</span>
+                                </button>
+                            </div>
+                        </div>
+
                         <div className="flex justify-between items-center">
-                            <h2 className="text-lg font-bold text-slate-800">Pitch Script</h2>
+                            <h2 className="text-lg font-bold text-slate-800">AI Response / Script</h2>
                             <div className="flex space-x-2">
                                 {pitch?.script && (
                                     <button
@@ -175,18 +246,6 @@ const PitchGenerator = () => {
                                         {copied ? 'Copied!' : 'Copy'}
                                     </button>
                                 )}
-                                <button
-                                    onClick={() => setIsModalOpen(true)}
-                                    disabled={loading}
-                                    className="flex items-center px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg hover:from-blue-700 hover:to-purple-700 transition disabled:opacity-50"
-                                >
-                                    {loading ? (
-                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                                    ) : (
-                                        <Wand2 className="w-4 h-4 mr-2" />
-                                    )}
-                                    {pitch?.script ? 'Customize' : 'Generate'}
-                                </button>
                             </div>
                         </div>
 
@@ -199,10 +258,8 @@ const PitchGenerator = () => {
                                 </div>
                             </div>
                         ) : (
-                            <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-12 rounded-xl text-center border border-blue-100">
-                                <Wand2 className="w-12 h-12 text-blue-600 mx-auto mb-4" />
-                                <h3 className="text-lg font-bold text-slate-800 mb-2">No Pitch Script Yet</h3>
-                                <p className="text-slate-600 mb-4">Click "Generate Script" to create an AI-powered investor pitch</p>
+                            <div className="bg-slate-50 p-8 rounded-xl text-center border border-slate-200 border-dashed">
+                                <p className="text-slate-500 text-sm">AI response will appear here...</p>
                             </div>
                         )}
                     </motion.div>
@@ -346,14 +403,6 @@ const PitchGenerator = () => {
                     </motion.div>
                 )}
             </AnimatePresence>
-
-            {/* Script Prompt Modal */}
-            <ScriptPromptModal
-                isOpen={isModalOpen}
-                onClose={() => setIsModalOpen(false)}
-                onGenerate={generateScript}
-                isLoading={loading}
-            />
         </div>
     );
 };

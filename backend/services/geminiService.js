@@ -2,12 +2,30 @@ const { GoogleGenerativeAI } = require('@google/generative-ai');
 
 // Initialize Gemini AI
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+// Using gemini-2.0-flash as it is a valid model available in the API
 const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+
+// Helper function for retry logic
+const generateContentWithRetry = async (prompt, retries = 5, delay = 10000) => {
+    try {
+        return await model.generateContent(prompt);
+    } catch (error) {
+        // Debug log to ensure we catch the error
+        console.log(`[DEBUG] Gemini Error: ${error.message}`);
+
+        if (retries > 0 && (error.message.includes('429') || error.message.includes('Quota'))) {
+            console.log(`Gemini Rate Limit hit. Retrying in ${delay / 1000}s... (Retries left: ${retries})`);
+            await new Promise(resolve => setTimeout(resolve, delay));
+            return generateContentWithRetry(prompt, retries - 1, delay * 2); // Exponential backoff
+        }
+        throw error;
+    }
+};
 
 /**
  * Generate a comprehensive pitch script based on startup data
  */
-const generatePitchScript = async (startupData) => {
+const generatePitchScript = async (startupData, customPrompt) => {
     const prompt = `You are an expert startup pitch consultant. Create a compelling investor pitch script based on the following startup information:
 
 Startup Name: ${startupData.name}
@@ -17,7 +35,9 @@ Solution: ${startupData.solution || 'Not specified'}
 Target Market: ${startupData.market || 'Not specified'}
 Stage: ${startupData.stage || 'Early Stage'}
 
-Generate a professional pitch script with the following sections:
+${customPrompt ? `\n--- FOUNDER INPUT ---\nThe founder has sent this message: "${customPrompt}"\n---------------------\n\nINSTRUCTIONS:\n1. If the input is a greeting (e.g., "hi"), question, or general request, simply REPLY DIRECTLY to the founder in a helpful, conversational manner. Do NOT generate the full pitch script in this case.\n2. If the input is a specific instruction for the pitch (e.g., "focus on AI", "make it short"), or if there is no input, generates the full pitch script following the structure below, incorporating the instructions.\n` : ''}
+
+Generate a professional pitch script with the following sections (ONLY if generating a full script):
 1. Opening Hook (30 seconds)
 2. The Problem (1 minute)
 3. The Solution (1 minute)
@@ -36,12 +56,11 @@ For each section, provide:
 Make it conversational, confident, and investor-ready. Total pitch should be 6-7 minutes.`;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await generateContentWithRetry(prompt);
         const response = await result.response;
         return response.text();
     } catch (error) {
         console.error('Error generating pitch script:', error.message);
-        console.error('Full error:', JSON.stringify(error, null, 2));
         throw new Error(`Failed to generate pitch script: ${error.message}`);
     }
 };
@@ -79,7 +98,7 @@ Format as JSON with this structure:
 }`;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await generateContentWithRetry(prompt);
         const response = await result.response;
         const text = response.text();
 
@@ -103,7 +122,6 @@ Format as JSON with this structure:
         }
     } catch (error) {
         console.error('Error generating presentation:', error.message);
-        console.error('Full error:', JSON.stringify(error, null, 2));
         throw new Error(`Failed to generate presentation: ${error.message}`);
     }
 };
@@ -138,7 +156,7 @@ Format as JSON:
 }`;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await generateContentWithRetry(prompt);
         const response = await result.response;
         const text = response.text();
 
@@ -160,7 +178,6 @@ Format as JSON:
         }
     } catch (error) {
         console.error('Error generating Q&A:', error.message);
-        console.error('Full error:', JSON.stringify(error, null, 2));
         throw new Error(`Failed to generate Q&A: ${error.message}`);
     }
 };

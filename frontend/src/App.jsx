@@ -15,6 +15,7 @@ import InvestorDashboard from './pages/InvestorDashboard';
 import MentorDashboard from './pages/MentorDashboard';
 import PricingPage from './pages/PricingPage';
 import PaymentPage from './pages/PaymentPage';
+import ResourceManagement from './pages/ResourceManagement';
 
 
 import { AuthProvider, useAuth } from './context/AuthContext';
@@ -109,6 +110,11 @@ function App() {
             <Route path="payment" element={
               <ProtectedRoute allowedRoles={['Founder']}>
                 <PaymentPage />
+              </ProtectedRoute>
+            } />
+            <Route path="resources" element={
+              <ProtectedRoute allowedRoles={['Founder']}>
+                <ResourceManagement />
               </ProtectedRoute>
             } />
           </Route>
