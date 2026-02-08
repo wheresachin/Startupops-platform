@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, useContext } from 'react';
-import axios from 'axios';
+import api from '../services/api'; // Use configured instance
 import toast from 'react-hot-toast';
 
 const AuthContext = createContext();
@@ -18,9 +18,7 @@ export const AuthProvider = ({ children }) => {
                     const parsedUser = JSON.parse(userInfo);
 
                     // Validate token with backend
-                    const { data } = await axios.get('/api/auth/me', {
-                        headers: { Authorization: `Bearer ${parsedUser.token}` }
-                    });
+                    const { data } = await api.get('/auth/me');
 
                     // Update user with fresh data from backend
                     const updatedUser = { ...data, token: parsedUser.token };
@@ -41,7 +39,7 @@ export const AuthProvider = ({ children }) => {
 
     const login = async (email, password) => {
         try {
-            const { data } = await axios.post('/api/auth/login', { email, password });
+            const { data } = await api.post('/auth/login', { email, password });
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             toast.success('Login successful!');
@@ -54,7 +52,7 @@ export const AuthProvider = ({ children }) => {
 
     const signup = async (name, email, password, role, username) => {
         try {
-            const { data } = await axios.post('/api/auth/register', { name, email, password, role, username });
+            const { data } = await api.post('/auth/register', { name, email, password, role, username });
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             toast.success('Registration successful!');
