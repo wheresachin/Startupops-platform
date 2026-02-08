@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { Plus, MoreVertical, Calendar } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -28,9 +28,9 @@ const Tasks = () => {
     const fetchData = async () => {
         try {
             const [tasksRes, milestonesRes, startupRes] = await Promise.all([
-                axios.get('/api/tasks', { headers: { Authorization: `Bearer ${user.token}` } }),
-                axios.get('/api/tasks/milestones/all', { headers: { Authorization: `Bearer ${user.token}` } }),
-                axios.get(`/api/startups/${user.startup}`, { headers: { Authorization: `Bearer ${user.token}` } })
+                api.get('/tasks'),
+                api.get('/tasks/milestones/all'),
+                api.get(`/startups/${user.startup}`)
             ]);
 
             setTasks(tasksRes.data);
@@ -57,9 +57,7 @@ const Tasks = () => {
 
     const handleAddTask = async (newTask) => {
         try {
-            const { data } = await axios.post('/api/tasks', newTask, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.post('/tasks', newTask);
             setTasks([...tasks, data]);
             setIsAddTaskModalOpen(false);
             toast.success('Task added successfully');
@@ -72,15 +70,11 @@ const Tasks = () => {
     const handleUpdateTask = async (updatedTask) => {
         try {
             // First update task details
-            const { data } = await axios.put(`/api/tasks/${updatedTask._id}`, updatedTask, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.put(`/tasks/${updatedTask._id}`, updatedTask);
 
             // If there's a new comment coming from the modal state
             if (updatedTask.newComment) {
-                await axios.post(`/api/tasks/${updatedTask._id}/comments`, { text: updatedTask.newComment }, {
-                    headers: { Authorization: `Bearer ${user.token}` }
-                });
+                await api.post(`/tasks/${updatedTask._id}/comments`, { text: updatedTask.newComment });
             }
 
             // We need to fetch data again to get the populated comments
@@ -97,9 +91,7 @@ const Tasks = () => {
     const handleDeleteTask = async (taskId) => {
         if (!window.confirm('Are you sure you want to delete this task?')) return;
         try {
-            await axios.delete(`/api/tasks/${taskId}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            await api.delete(`/tasks/${taskId}`);
             setTasks(tasks.filter(t => t._id !== taskId));
             setActiveMenuTaskId(null);
             toast.success('Task deleted');

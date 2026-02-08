@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { MessageSquare, Star, Share2, Filter, Trash2, CheckCircle } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
@@ -21,9 +21,7 @@ const Feedback = () => {
 
     const fetchFeedback = async () => {
         try {
-            const { data } = await axios.get(`/api/feedback/${user.startup}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get(`/feedback/${user.startup}`);
             setFeedback(data);
         } catch (error) {
             console.error('Error fetching feedback:', error);
@@ -34,9 +32,7 @@ const Feedback = () => {
 
     const handleUpdateStatus = async (id, newStatus) => {
         try {
-            const { data } = await axios.put(`/api/feedback/${id}`, { status: newStatus }, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.put(`/feedback/${id}`, { status: newStatus });
             setFeedback(feedback.map(f => f._id === id ? data : f));
             toast.success(`Marked as ${newStatus}`);
         } catch (error) {
@@ -47,9 +43,7 @@ const Feedback = () => {
     const handleDelete = async (id) => {
         if (!window.confirm('Delete this feedback?')) return;
         try {
-            await axios.delete(`/api/feedback/${id}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            await api.delete(`/feedback/${id}`);
             setFeedback(feedback.filter(f => f._id !== id));
             toast.success('Feedback deleted');
         } catch (error) {

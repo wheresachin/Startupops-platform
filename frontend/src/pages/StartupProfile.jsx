@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { Building2, Users, Edit2, Save, Plus, Link, Copy, Check } from 'lucide-react';
 import { motion } from 'framer-motion';
 import AddMemberModal from '../components/AddMemberModal';
@@ -34,9 +34,7 @@ const StartupProfile = () => {
 
     const fetchStartupDetails = async () => {
         try {
-            const { data } = await axios.get(`/api/startups/${user.startup}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get(`/startups/${user.startup}`);
             setStartup(data);
             setTeam(data.team || []);
             setFormData({
@@ -56,9 +54,7 @@ const StartupProfile = () => {
     const handleCreateStartup = async (e) => {
         e.preventDefault();
         try {
-            const { data } = await axios.post('/api/startups', formData, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.post('/startups', formData);
             setStartup(data);
             setTeam(data.team || []);
 
@@ -74,9 +70,7 @@ const StartupProfile = () => {
 
     const handleUpdateStartup = async () => {
         try {
-            const { data } = await axios.put(`/api/startups/${startup._id}`, formData, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.put(`/startups/${startup._id}`, formData);
             setStartup(data);
             setIsEditing(false);
             toast.success('Startup profile updated!');
@@ -87,14 +81,9 @@ const StartupProfile = () => {
 
     const handleAddMember = async (newMember) => {
         try {
-            const { data } = await axios.post(`/api/startups/${startup._id}/members`, { email: newMember.email }, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
-            setTeam(data.team); // Backend should return updated team array or user object, adjusting based on controller response
-            // Re-fetch to be sure or update locally if controller returns just added member
-            // Checking controller: returns { message, team: [...] } which maps to user IDs. 
-            // We need populated team. Ideally controller should return populated team or we re-fetch.
-            // Let's re-fetch for simplicity and correctness.
+            const { data } = await api.post(`/startups/${startup._id}/members`, { email: newMember.email });
+            // setTeam(data.team); // Removed to prevent potential crash with unpopulated data
+            // Fetch updated details to get populated team data
             fetchStartupDetails();
             setIsAddMemberModalOpen(false);
             toast.success('Team member added successfully');
