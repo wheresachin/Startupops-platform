@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Star, Send } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useSearchParams } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 import { addFeedback } from '../services/mockData';
 
@@ -39,7 +39,7 @@ const PublicFeedback = () => {
 
         try {
             // Send to backend API
-            await axios.post(`/api/feedback/${startupId}`, {
+            await api.post(`/feedback/${startupId}`, {
                 name,
                 email,
                 rating,

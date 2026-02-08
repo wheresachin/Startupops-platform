@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Bell, Search, LogOut } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { useNavigate } from 'react-router-dom';
 
@@ -23,9 +23,7 @@ const Topbar = ({ onMobileMenuClick }) => {
 
     const fetchNotifications = async () => {
         try {
-            const { data } = await axios.get('/api/notifications', {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get('/notifications');
             setNotifications(data);
             setUnreadCount(data.filter(n => !n.read).length);
         } catch (error) {
@@ -35,9 +33,7 @@ const Topbar = ({ onMobileMenuClick }) => {
 
     const handleMarkAsRead = async (id) => {
         try {
-            await axios.put(`/api/notifications/${id}/read`, {}, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            await api.put(`/notifications/${id}/read`, {});
             // Update local state
             setNotifications(notifications.map(n =>
                 n._id === id ? { ...n, read: true } : n

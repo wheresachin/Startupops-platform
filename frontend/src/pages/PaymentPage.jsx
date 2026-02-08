@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { CreditCard, Wallet, ArrowLeft, ShieldCheck } from 'lucide-react';
-import axios from 'axios';
+import api from '../services/api';
 import toast from 'react-hot-toast';
 import { useAuth } from '../context/AuthContext';
 
@@ -57,10 +57,8 @@ const PaymentPage = () => {
 
         try {
             // Create Order
-            const { data: orderData } = await axios.post('/api/subscription/create-order', {
+            const { data: orderData } = await api.post('/subscription/create-order', {
                 plan
-            }, {
-                headers: { Authorization: `Bearer ${user.token}` }
             });
 
             const options = {
@@ -84,9 +82,7 @@ const PaymentPage = () => {
                             plan
                         };
 
-                        const { data } = await axios.post('/api/subscription/verify', verifyData, {
-                            headers: { Authorization: `Bearer ${user.token}` }
-                        });
+                        const { data } = await api.post('/subscription/verify', verifyData);
 
                         toast.success(data.message);
                         navigate('/app/dashboard');
@@ -143,8 +139,8 @@ const PaymentPage = () => {
                                 <button
                                     onClick={() => setPaymentMethod('card')}
                                     className={`flex-1 py-3 px-4 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${paymentMethod === 'card'
-                                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                            : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                        : 'border-slate-200 hover:border-slate-300 text-slate-600'
                                         }`}
                                 >
                                     <CreditCard className="w-6 h-6 mb-2" />
@@ -153,8 +149,8 @@ const PaymentPage = () => {
                                 <button
                                     onClick={() => setPaymentMethod('upi')}
                                     className={`flex-1 py-3 px-4 rounded-xl border-2 flex flex-col items-center justify-center transition-all ${paymentMethod === 'upi'
-                                            ? 'border-blue-500 bg-blue-50 text-blue-700'
-                                            : 'border-slate-200 hover:border-slate-300 text-slate-600'
+                                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                                        : 'border-slate-200 hover:border-slate-300 text-slate-600'
                                         }`}
                                 >
                                     <Wallet className="w-6 h-6 mb-2" />
