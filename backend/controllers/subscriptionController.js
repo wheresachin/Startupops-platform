@@ -3,10 +3,19 @@ const Razorpay = require('razorpay');
 const crypto = require('crypto');
 
 // Initialize Razorpay
-const razorpay = new Razorpay({
-    key_id: process.env.RAZORPAY_KEY_ID,
-    key_secret: process.env.RAZORPAY_KEY_SECRET
-});
+let razorpay;
+if (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET) {
+    try {
+        razorpay = new Razorpay({
+            key_id: process.env.RAZORPAY_KEY_ID,
+            key_secret: process.env.RAZORPAY_KEY_SECRET
+        });
+    } catch (err) {
+        console.error("Razorpay initialization failed:", err);
+    }
+} else {
+    console.warn("Razorpay keys missing! Payment features will be disabled.");
+}
 
 // Plan Limits Configuration
 const PLAN_LIMITS = {
@@ -20,6 +29,9 @@ const PLAN_LIMITS = {
 // @access  Private (Founder only)
 exports.createOrder = async (req, res) => {
     try {
+        if (!razorpay) {
+            return res.status(503).json({ message: 'Payment service unavailable (Configuration missing)' });
+        }
         const { plan } = req.body;
 
         if (!PLAN_LIMITS[plan]) {
@@ -53,6 +65,9 @@ exports.createOrder = async (req, res) => {
 // @access  Private (Founder only)
 exports.verifyPayment = async (req, res) => {
     try {
+        if (!process.env.RAZORPAY_KEY_SECRET) {
+            return res.status(503).json({ message: 'Payment service unavailable (Configuration missing)' });
+        }
         const { razorpay_order_id, razorpay_payment_id, razorpay_signature, plan } = req.body;
 
         const body = razorpay_order_id + "|" + razorpay_payment_id;
