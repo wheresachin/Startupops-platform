@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
@@ -18,9 +18,7 @@ const Analytics = () => {
 
     const fetchAnalytics = async () => {
         try {
-            const { data } = await axios.get('/api/analytics', {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get('/analytics');
             setAnalyticsData(data);
         } catch (error) {
             console.error('Error fetching analytics:', error);

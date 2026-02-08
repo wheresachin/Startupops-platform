@@ -15,9 +15,22 @@ const Signup = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const success = await signup(name, email, password, role, username);
-        if (success) {
-            navigate('/app/dashboard');
+        const userData = await signup(name, email, password, role, username);
+        if (userData) {
+            // Role-based redirect
+            switch (userData.role) {
+                case 'Investor':
+                    navigate('/investor/dashboard');
+                    break;
+                case 'Mentor':
+                    navigate('/mentor/dashboard');
+                    break;
+                case 'Founder':
+                case 'Team':
+                default:
+                    navigate('/app/dashboard');
+                    break;
+            }
         }
     };
 
