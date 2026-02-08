@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import axios from 'axios';
+import api from '../services/api';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { CheckCircle2, ListTodo, MessageSquare, TrendingUp, Users, CheckSquare, UserPlus, CreditCard } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
@@ -35,9 +35,7 @@ const Dashboard = () => {
 
     const fetchDashboardData = async () => {
         try {
-            const { data } = await axios.get('/api/dashboard/stats', {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get('/dashboard/stats');
             setKpis(data.kpis);
             setAnalytics(data.analytics);
             setRecentFeedback(data.recentFeedback);

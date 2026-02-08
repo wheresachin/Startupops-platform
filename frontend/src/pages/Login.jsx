@@ -12,10 +12,10 @@ const Login = () => {
 
     const handleLogin = async (e) => {
         e.preventDefault();
-        const user = await login(email, password);
-        if (user) {
+        const userData = await login(email, password);
+        if (userData) {
             // Role-based redirect
-            switch (user.role) {
+            switch (userData.role) {
                 case 'Investor':
                     navigate('/investor/dashboard');
                     break;

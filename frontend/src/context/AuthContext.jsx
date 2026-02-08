@@ -43,10 +43,10 @@ export const AuthProvider = ({ children }) => {
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             toast.success('Login successful!');
-            return true;
+            return data; // Return full user object
         } catch (error) {
             toast.error(error.response?.data?.message || 'Login failed');
-            return false;
+            return null;
         }
     };
 
@@ -56,7 +56,7 @@ export const AuthProvider = ({ children }) => {
             setUser(data);
             localStorage.setItem('userInfo', JSON.stringify(data));
             toast.success('Registration successful!');
-            return true;
+            return data; // Return full user object
         } catch (error) {
             toast.error(error.response?.data?.message || 'Registration failed');
             return false;
