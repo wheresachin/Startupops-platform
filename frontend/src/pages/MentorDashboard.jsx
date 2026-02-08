@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { CheckSquare, Clock, AlertCircle, TrendingUp, MessageSquare, Star } from 'lucide-react';
@@ -25,9 +25,7 @@ const MentorDashboard = () => {
 
     const fetchStartups = async () => {
         try {
-            const { data } = await axios.get('/api/mentor/startups', {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get('/mentor/startups');
             setStartups(data.startups);
             if (data.startups.length > 0) {
                 setSelectedStartup(data.startups[0].id);
@@ -43,9 +41,7 @@ const MentorDashboard = () => {
     const fetchDashboard = async (startupId) => {
         try {
             setLoading(true);
-            const { data } = await axios.get(`/api/mentor/dashboard/${startupId}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get(`/mentor/dashboard/${startupId}`);
             setDashboardData(data);
         } catch (error) {
             toast.error('Failed to load dashboard data');
@@ -58,12 +54,10 @@ const MentorDashboard = () => {
     const submitFeedback = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/mentor/feedback', {
+            await api.post('/mentor/feedback', {
                 startupId: selectedStartup,
                 rating: feedbackForm.rating,
                 comment: feedbackForm.comment
-            }, {
-                headers: { Authorization: `Bearer ${user.token}` }
             });
             toast.success('Feedback submitted successfully');
             setFeedbackForm({ rating: 5, comment: '' });
@@ -209,7 +203,7 @@ const MentorDashboard = () => {
                                 {dashboardData.tasks.slice(0, 5).map((task, idx) => (
                                     <div key={idx} className="flex items-start p-3 bg-slate-50 rounded-lg border border-slate-100">
                                         <div className={`p-2 rounded-lg ${task.status === 'Done' ? 'bg-green-100' :
-                                                task.status === 'In Progress' ? 'bg-blue-100' : 'bg-slate-200'
+                                            task.status === 'In Progress' ? 'bg-blue-100' : 'bg-slate-200'
                                             } mr-3`}>
                                             {task.priority === 'High' ? (
                                                 <AlertCircle className="w-4 h-4 text-red-600" />
@@ -221,14 +215,14 @@ const MentorDashboard = () => {
                                             <p className="font-medium text-slate-900">{task.title}</p>
                                             <div className="flex items-center space-x-2 mt-1">
                                                 <span className={`text-xs px-2 py-1 rounded-full ${task.status === 'Done' ? 'bg-green-100 text-green-700' :
-                                                        task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
-                                                            'bg-slate-100 text-slate-700'
+                                                    task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                                                        'bg-slate-100 text-slate-700'
                                                     }`}>
                                                     {task.status}
                                                 </span>
                                                 <span className={`text-xs px-2 py-1 rounded-full ${task.priority === 'High' ? 'bg-red-100 text-red-700' :
-                                                        task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-green-100 text-green-700'
+                                                    task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-green-100 text-green-700'
                                                     }`}>
                                                     {task.priority}
                                                 </span>
@@ -262,16 +256,16 @@ const MentorDashboard = () => {
                                             <td className="py-3 px-4 text-sm text-slate-900">{task.title}</td>
                                             <td className="py-3 px-4">
                                                 <span className={`text-xs px-2 py-1 rounded-full ${task.status === 'Done' ? 'bg-green-100 text-green-700' :
-                                                        task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
-                                                            'bg-slate-100 text-slate-700'
+                                                    task.status === 'In Progress' ? 'bg-blue-100 text-blue-700' :
+                                                        'bg-slate-100 text-slate-700'
                                                     }`}>
                                                     {task.status}
                                                 </span>
                                             </td>
                                             <td className="py-3 px-4">
                                                 <span className={`text-xs px-2 py-1 rounded-full ${task.priority === 'High' ? 'bg-red-100 text-red-700' :
-                                                        task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
-                                                            'bg-green-100 text-green-700'
+                                                    task.priority === 'Medium' ? 'bg-yellow-100 text-yellow-700' :
+                                                        'bg-green-100 text-green-700'
                                                     }`}>
                                                     {task.priority}
                                                 </span>
@@ -305,8 +299,8 @@ const MentorDashboard = () => {
                                         >
                                             <Star
                                                 className={`w-8 h-8 ${star <= feedbackForm.rating
-                                                        ? 'fill-yellow-400 text-yellow-400'
-                                                        : 'text-slate-300'
+                                                    ? 'fill-yellow-400 text-yellow-400'
+                                                    : 'text-slate-300'
                                                     }`}
                                             />
                                         </button>

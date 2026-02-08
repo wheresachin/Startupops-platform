@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, Target, CheckCircle, Clock, MessageSquare, Star } from 'lucide-react';
@@ -25,9 +25,7 @@ const InvestorDashboard = () => {
 
     const fetchStartups = async () => {
         try {
-            const { data } = await axios.get('/api/investor/startups', {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get('/investor/startups');
             setStartups(data.startups);
             if (data.startups.length > 0) {
                 setSelectedStartup(data.startups[0].id);
@@ -43,9 +41,7 @@ const InvestorDashboard = () => {
     const fetchDashboard = async (startupId) => {
         try {
             setLoading(true);
-            const { data } = await axios.get(`/api/investor/dashboard/${startupId}`, {
-                headers: { Authorization: `Bearer ${user.token}` }
-            });
+            const { data } = await api.get(`/investor/dashboard/${startupId}`);
             setDashboardData(data);
         } catch (error) {
             toast.error('Failed to load dashboard data');
@@ -58,12 +54,10 @@ const InvestorDashboard = () => {
     const submitFeedback = async (e) => {
         e.preventDefault();
         try {
-            await axios.post('/api/investor/feedback', {
+            await api.post('/investor/feedback', {
                 startupId: selectedStartup,
                 rating: feedbackForm.rating,
                 comment: feedbackForm.comment
-            }, {
-                headers: { Authorization: `Bearer ${user.token}` }
             });
             toast.success('Feedback submitted successfully');
             setFeedbackForm({ rating: 5, comment: '' });
@@ -207,7 +201,7 @@ const InvestorDashboard = () => {
                                     dashboardData.milestones.map((milestone, idx) => (
                                         <div key={idx} className="flex items-start p-3 bg-slate-50 rounded-lg">
                                             <div className={`p-2 rounded-lg ${milestone.status === 'Done' ? 'bg-green-100' :
-                                                    milestone.status === 'In Progress' ? 'bg-blue-100' : 'bg-slate-200'
+                                                milestone.status === 'In Progress' ? 'bg-blue-100' : 'bg-slate-200'
                                                 } mr-3`}>
                                                 {milestone.status === 'Done' ? (
                                                     <CheckCircle className="w-4 h-4 text-green-600" />
@@ -251,8 +245,8 @@ const InvestorDashboard = () => {
                                         >
                                             <Star
                                                 className={`w-8 h-8 ${star <= feedbackForm.rating
-                                                        ? 'fill-yellow-400 text-yellow-400'
-                                                        : 'text-slate-300'
+                                                    ? 'fill-yellow-400 text-yellow-400'
+                                                    : 'text-slate-300'
                                                     }`}
                                             />
                                         </button>
