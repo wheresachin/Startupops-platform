@@ -59,7 +59,7 @@ export const AuthProvider = ({ children }) => {
             return data; // Return full user object
         } catch (error) {
             toast.error(error.response?.data?.message || 'Registration failed');
-            return false;
+            return null;
         }
     };
 
